@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -79,14 +80,33 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+//    @Override
+//    public Long getConnectedUserId() {
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        if (auth == null || !auth.isAuthenticated()) {
+//            return null;
+//        }
+//        User user = (User) auth.getPrincipal();
+//        return user.getId();
+//    }
+
     @Override
     public Long getConnectedUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return null;
         }
-        User user = (User) auth.getPrincipal();
-        return user.getId();
+        String username;
+        if (auth.getPrincipal() instanceof UserDetails) {
+            username = ((UserDetails) auth.getPrincipal()).getUsername();
+        } else {
+            username = auth.getName(); // Toujours disponible
+        }
+        if ("anonymousUser".equals(username)) {
+            return null;
+        }
+        User user = getUserByUsername(username);
+        return user != null ? user.getId() : null;
     }
 
     @Override

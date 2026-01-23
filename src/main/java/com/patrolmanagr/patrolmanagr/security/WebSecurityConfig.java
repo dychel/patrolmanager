@@ -44,7 +44,15 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/patrolmanagr/user/reset-password").permitAll()
                 .requestMatchers("/api/patrolmanagr/user/add").permitAll()
                 .requestMatchers("/api/patrolmanagr/role/add").permitAll()
-                .requestMatchers("/api/patrolmanagr/role/add").permitAll()
+                //
+                .requestMatchers("/api/patrolmanagr/zone/add").permitAll()
+                .requestMatchers("/api/patrolmanagr/zone/all").permitAll()
+                //
+                .requestMatchers("/api/patrolmanagr/site/add").permitAll()
+                .requestMatchers("/api/patrolmanagr/site/all").permitAll()
+                //
+                .requestMatchers("/api/patrolmanagr/vendorapi/add").permitAll()
+                .requestMatchers("/api/patrolmanagr/vendorapi/all").permitAll()
                 //
                 .requestMatchers("/images/**").permitAll()
                 .anyRequest().authenticated()

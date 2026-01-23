@@ -20,5 +20,4 @@ public class Ref_vendor_apiDTO {
     private String base_url;
     private Long status;
     private String audit_field;
-
 }
