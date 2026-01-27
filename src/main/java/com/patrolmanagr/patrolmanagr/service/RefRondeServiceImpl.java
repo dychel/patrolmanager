@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class RefRondeServiceImpl implements RefRondeSercice{
+public class RefRondeServiceImpl implements RefRondeService {
 
     @Autowired
     ModelMapper modelMapper;

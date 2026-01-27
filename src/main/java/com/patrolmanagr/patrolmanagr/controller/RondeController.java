@@ -2,7 +2,7 @@ package com.patrolmanagr.patrolmanagr.controller;
 import com.patrolmanagr.patrolmanagr.dto.Ref_rondeDTO;
 import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.response.ResponseMessage;
-import com.patrolmanagr.patrolmanagr.service.RefRondeSercice;
+import com.patrolmanagr.patrolmanagr.service.RefRondeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class RondeController {
 
     @Autowired
-    RefRondeSercice refRondeSercice;
+    RefRondeService refRondeSercice;
     @PostMapping("/add")
     public ResponseEntity<?> createRonde(@RequestBody Ref_rondeDTO ref_rondeDTO) {
         refRondeSercice.saveRonde(ref_rondeDTO);

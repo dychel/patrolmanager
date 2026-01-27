@@ -1,5 +1,5 @@
 package com.patrolmanagr.patrolmanagr.dto;
-import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,12 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Ref_secteurDTO {
+public class RefRondePastilleDTO {
 
-    private String code;
-    private String name;
-    private Long siteId;
-    private String client_name;
-    private Long status;
+    private Long refRondeId;
+    private Long refPastilleId;
+    private Integer seq_no;
+    private Integer expected_travel_sec;
     private String audit_field;
 }

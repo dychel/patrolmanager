@@ -53,7 +53,7 @@ public class UserController {
         User user = userService.getUserByUsername(loginRequest.getUsername());
 
         if (!Objects.equals(user.getIs_active(), statusActif)) {
-            return new ResponseEntity<>(new ResponseMessage("chao", "Compte bloqué!", null), HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseMessage("chao", "Compte non activé!", null), HttpStatus.OK);
         }
 
         Authentication authentication = authenticationManager.authenticate(

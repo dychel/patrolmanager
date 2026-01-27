@@ -11,9 +11,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Ref_siteDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     private String code;
     private String name;
     private Long zoneId;

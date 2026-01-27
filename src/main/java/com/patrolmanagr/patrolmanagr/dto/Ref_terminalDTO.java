@@ -11,9 +11,6 @@ import java.util.Date;
 @AllArgsConstructor
 public class Ref_terminalDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     private Terminal_Type terminalType;
     private String code;
     private String serial_number;

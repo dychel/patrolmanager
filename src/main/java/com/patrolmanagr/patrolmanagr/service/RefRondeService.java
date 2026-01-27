@@ -1,13 +1,11 @@
 package com.patrolmanagr.patrolmanagr.service;
 
 import com.patrolmanagr.patrolmanagr.dto.Ref_rondeDTO;
-import com.patrolmanagr.patrolmanagr.dto.Ref_terminalDTO;
 import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
-import com.patrolmanagr.patrolmanagr.entity.Ref_terminal;
 
 import java.util.List;
 
-public interface RefRondeSercice {
+public interface RefRondeService {
 
     Ref_ronde saveRonde(Ref_rondeDTO ref_rondeDTO);
     Ref_ronde updateRonde(Long id, Ref_rondeDTO ref_rondeDTO);
