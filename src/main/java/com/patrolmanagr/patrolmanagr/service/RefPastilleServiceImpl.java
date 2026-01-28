@@ -1,10 +1,8 @@
 package com.patrolmanagr.patrolmanagr.service;
+import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.dto.Ref_pastilleDTO;
 import com.patrolmanagr.patrolmanagr.dto.Ref_terminalDTO;
-import com.patrolmanagr.patrolmanagr.entity.Ref_pastille;
-import com.patrolmanagr.patrolmanagr.entity.Ref_secteur;
-import com.patrolmanagr.patrolmanagr.entity.Ref_site;
-import com.patrolmanagr.patrolmanagr.entity.Ref_terminal;
+import com.patrolmanagr.patrolmanagr.entity.*;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
 import com.patrolmanagr.patrolmanagr.repository.RefPastilleRepository;
 import com.patrolmanagr.patrolmanagr.repository.RefSecteurRepository;
@@ -33,6 +31,13 @@ public class RefPastilleServiceImpl implements RefPastilleService {
     public Ref_pastille savePastille(Ref_pastilleDTO refPastilleDTO) {
         Ref_pastille ref_pastille = modelMapper.map(refPastilleDTO, Ref_pastille.class);
         ref_pastille.setCreated_by(userService.getConnectedUserId());
+        // Mettre à jour les clés étrangères
+        updateForeignKeySite_Secteur(refPastilleDTO, ref_pastille);
+
+        // Initialiser le statut si non fourni
+        if (ref_pastille.getStatus() == null) {
+            ref_pastille.setStatus(Status.ACTIVE);
+        }
         return refPastilleRepository.save(ref_pastille);
     }
 

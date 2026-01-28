@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin(origins = {"*"}, maxAge = 3600)
-@RequestMapping("/api/patrolmanagr/role/*")
+@RequestMapping("/api/v1/patrolmanagr/role/*")
 public class RoleController {
 
     @Autowired

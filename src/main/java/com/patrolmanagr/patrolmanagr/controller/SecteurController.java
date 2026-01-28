@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = {"*"}, maxAge = 3600)
-@RequestMapping("/api/patrolmanagr/secteur/*")
+@RequestMapping("/api/v1/patrolmanagr/secteur/*")
 public class SecteurController {
 
     @Autowired

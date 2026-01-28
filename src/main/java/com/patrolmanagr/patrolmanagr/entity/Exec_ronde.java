@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
                 @Index(name = "IDX_exec_date", columnList = "exec_date, status"),
                 @Index(name = "IDX_exec_prog", columnList = "prog_ronde_id, planned_start_at")
         })
-public class exec_ronde {
+public class Exec_ronde {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +37,7 @@ public class exec_ronde {
 
     @ManyToOne
     @JoinColumn(name = "prog_ronde_id", nullable = false)
-    private prog_ronde progRonde;
+    private Prog_ronde progRonde;
 
     @ManyToOne
     @JoinColumn(name = "ref_ronde_id", nullable = false)

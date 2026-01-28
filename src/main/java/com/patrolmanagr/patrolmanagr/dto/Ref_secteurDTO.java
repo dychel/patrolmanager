@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Ref_secteurDTO {
 
+    private Long id;
     private String code;
     private String name;
     private Long siteId;

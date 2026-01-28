@@ -1,5 +1,7 @@
 package com.patrolmanagr.patrolmanagr.service;
+import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.dto.Ref_rondeDTO;
+import com.patrolmanagr.patrolmanagr.entity.Prog_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_site;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
@@ -24,8 +26,17 @@ public class RefRondeServiceImpl implements RefRondeService {
 
     @Override
     public Ref_ronde saveRonde(Ref_rondeDTO ref_rondeDTO) {
+
         Ref_ronde ref_ronde = modelMapper.map(ref_rondeDTO, Ref_ronde.class);
         ref_ronde.setCreated_by(userService.getConnectedUserId());
+
+        // Mettre à jour les clés étrangères
+        updateForeignKeySite(ref_rondeDTO, ref_ronde);
+
+        // Initialiser le statut si non fourni
+        if (ref_ronde.getStatus() == null) {
+            ref_ronde.setStatus(Status.ACTIVE);
+        }
         return refRondeRepository.save(ref_ronde);
     }
 

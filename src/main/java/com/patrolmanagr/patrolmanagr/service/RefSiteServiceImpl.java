@@ -1,5 +1,7 @@
 package com.patrolmanagr.patrolmanagr.service;
+import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.dto.Ref_siteDTO;
+import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_site;
 import com.patrolmanagr.patrolmanagr.entity.Ref_zone;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
@@ -26,6 +28,13 @@ public class RefSiteServiceImpl implements RefSiteService{
     public Ref_site saveSite(Ref_siteDTO ref_siteDTO) {
         Ref_site ref_site = modelMapper.map(ref_siteDTO, Ref_site.class);
         ref_site.setCreated_by(userService.getConnectedUserId());
+        // Mettre à jour les clés étrangères
+        updateForeignKeyZone(ref_siteDTO, ref_site);
+
+        // Initialiser le statut si non fourni
+        if (ref_site.getStatus() == null) {
+            ref_site.setStatus(Status.ACTIVE);
+        }
         return refSiteRepository.save(ref_site);
     }
 

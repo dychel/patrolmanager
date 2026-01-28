@@ -1,8 +1,6 @@
 package com.patrolmanagr.patrolmanagr.controller;
 import com.patrolmanagr.patrolmanagr.dto.Ref_pastilleDTO;
-import com.patrolmanagr.patrolmanagr.dto.Ref_terminalDTO;
 import com.patrolmanagr.patrolmanagr.entity.Ref_pastille;
-import com.patrolmanagr.patrolmanagr.entity.Ref_terminal;
 import com.patrolmanagr.patrolmanagr.response.ResponseMessage;
 import com.patrolmanagr.patrolmanagr.service.RefPastilleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = {"*"}, maxAge = 3600)
-@RequestMapping("/api/patrolmanagr/pastille/*")
+@RequestMapping("/api/v1/patrolmanagr/pastille/*")
 public class PastilleController {
 
     @Autowired

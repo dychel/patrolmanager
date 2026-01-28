@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Ref_vendor_apiDTO {
 
+    private Long id;
     private String name;
     private String vendor_code;
     private Long mode;

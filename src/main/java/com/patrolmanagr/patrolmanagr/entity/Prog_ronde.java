@@ -12,17 +12,17 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-public class prog_ronde {
+public class Prog_ronde {
 
-  @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
     @JoinColumn(name = "ref_ronde_id")
-    private Ref_ronde ref_ronde_id;
+    private Ref_ronde ref_ronde;
     @ManyToOne
     @JoinColumn(name = "ref_site_id")
-    private Ref_site ref_site_id;
+    private Ref_site ref_site;
     private Scheduled_Type scheduledType;
     @ManyToOne
     @JoinColumn(name = "user_id")

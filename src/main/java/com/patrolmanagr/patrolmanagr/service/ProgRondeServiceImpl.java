@@ -1,9 +1,6 @@
 package com.patrolmanagr.patrolmanagr.service;
 import com.patrolmanagr.patrolmanagr.dto.ProgRondeDTO;
-import com.patrolmanagr.patrolmanagr.entity.prog_ronde;
-import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
-import com.patrolmanagr.patrolmanagr.entity.Ref_site;
-import com.patrolmanagr.patrolmanagr.entity.Ref_terminal;
+import com.patrolmanagr.patrolmanagr.entity.*;
 import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
 import com.patrolmanagr.patrolmanagr.repository.ProgRondeRepository;
@@ -32,8 +29,8 @@ public class ProgRondeServiceImpl implements ProgRondeService {
     RefTerminalService refTerminalService;
 
     @Override
-    public prog_ronde saveProgRonde(ProgRondeDTO progRondeDTO) {
-        prog_ronde prog_ronde = modelMapper.map(progRondeDTO, prog_ronde.class);
+    public Prog_ronde saveProgRonde(ProgRondeDTO progRondeDTO) {
+        Prog_ronde prog_ronde = modelMapper.map(progRondeDTO, Prog_ronde.class);
         prog_ronde.setCreated_by(userService.getConnectedUserId());
 
         // Mettre à jour les clés étrangères
@@ -44,16 +41,19 @@ public class ProgRondeServiceImpl implements ProgRondeService {
             prog_ronde.setStatus(Status.ACTIVE);
         }
 
-        return progRondeRepository.save(prog_ronde);
+       return progRondeRepository.save(prog_ronde);
+//        Prog_ronde progRonde = modelMapper.map(progRondeDTO, Prog_ronde.class);
+//        progRonde.setCreated_by(userService.getConnectedUserId());
+//        return progRondeRepository.save(progRonde);
     }
 
     @Override
-    public prog_ronde updateProgRonde(Long id, ProgRondeDTO progRondeDTO) {
-        prog_ronde progRondeToUpdate = progRondeRepository.findByIdProgRonde(id);
+    public Prog_ronde updateProgRonde(Long id, ProgRondeDTO progRondeDTO) {
+        Prog_ronde progRondeToUpdate = progRondeRepository.findByIdProgRonde(id);
         if (progRondeToUpdate == null)
             throw new ApiRequestException("ProgRonde ID non trouvé");
 
-        prog_ronde prog_ronde = modelMapper.map(progRondeDTO, prog_ronde.class);
+        Prog_ronde prog_ronde = modelMapper.map(progRondeDTO, Prog_ronde.class);
         prog_ronde.setId(id);
         prog_ronde.setUpdated_at(LocalDateTime.now());
         prog_ronde.setUpdated_by(userService.getConnectedUserId());
@@ -64,24 +64,24 @@ public class ProgRondeServiceImpl implements ProgRondeService {
         return progRondeRepository.save(prog_ronde);
     }
 
-    private void updateForeignKeys(ProgRondeDTO progRondeDTO, prog_ronde prog_ronde) {
+    private void updateForeignKeys(ProgRondeDTO progRondeDTO, Prog_ronde prog_ronde) {
         // Mettre à jour id Ronde
         if (progRondeDTO.getRefRondeId() != null) {
             Ref_ronde ronde = refRondeService.findRondeById(progRondeDTO.getRefRondeId());
-            prog_ronde.setRef_ronde_id(ronde);
+            prog_ronde.setRef_ronde(ronde);
         }
 
         // Mettre à jour id Site
         if (progRondeDTO.getRefSiteId() != null) {
             Ref_site site = refSiteService.findSiteById(progRondeDTO.getRefSiteId());
-            prog_ronde.setRef_site_id(site);
+            prog_ronde.setRef_site(site);
         }
 
         // Mettre à jour id Agent (User)
         if (progRondeDTO.getAssignedAgentId() != null) {
             // Ici, vous auriez besoin d'un UserService pour récupérer l'utilisateur
-            // User agent = userService.findById(progRondeDTO.getAssignedAgentId());
-            // prog_ronde.setAssigned_agent_id(agent);
+             User agent = userService.getUserById(progRondeDTO.getAssignedAgentId());
+             prog_ronde.setAssigned_agent_id(agent);
             // Pour l'instant, on laisse null ou on gère selon votre implémentation
         }
 
@@ -93,59 +93,59 @@ public class ProgRondeServiceImpl implements ProgRondeService {
     }
 
     @Override
-    public prog_ronde findProgRondeById(Long id) {
-        prog_ronde progRondeToUpdate = progRondeRepository.findByIdProgRonde(id);
+    public Prog_ronde findProgRondeById(Long id) {
+        Prog_ronde progRondeToUpdate = progRondeRepository.findByIdProgRonde(id);
         if (progRondeToUpdate == null)
             throw new ApiRequestException("ProgRonde non trouvé");
         return progRondeToUpdate;
     }
 
     @Override
-    public List<prog_ronde> listProgRonde() {
-        List<prog_ronde> prog_rondes = progRondeRepository.findAll();
-        if (prog_rondes.isEmpty())
+    public List<Prog_ronde> listProgRonde() {
+        List<Prog_ronde> Prog_rondes = progRondeRepository.findAll();
+        if (Prog_rondes.isEmpty())
             throw new ApiRequestException("Pas de programmations de ronde enregistrées dans la base de données");
-        return prog_rondes;
+        return Prog_rondes;
     }
 
     @Override
-    public List<prog_ronde> findProgRondeByRondeId(Long rondeId) {
+    public List<Prog_ronde> findProgRondeByRondeId(Long rondeId) {
         refRondeService.findRondeById(rondeId); // Vérifie si la ronde existe
-        List<prog_ronde> progRondes = progRondeRepository.findByRondeId(rondeId);
+        List<Prog_ronde> progRondes = progRondeRepository.findByRondeId(rondeId);
         if (progRondes.isEmpty())
             throw new ApiRequestException("Pas de programmation trouvée pour cette ronde");
         return progRondes;
     }
 
     @Override
-    public List<prog_ronde> findProgRondeBySiteId(Long siteId) {
+    public List<Prog_ronde> findProgRondeBySiteId(Long siteId) {
         refSiteService.findSiteById(siteId); // Vérifie si le site existe
-        List<prog_ronde> progRondes = progRondeRepository.findBySiteId(siteId);
+        List<Prog_ronde> progRondes = progRondeRepository.findBySiteId(siteId);
         if (progRondes.isEmpty())
             throw new ApiRequestException("Pas de programmation trouvée pour ce site");
         return progRondes;
     }
 
     @Override
-    public List<prog_ronde> findProgRondeByUserId(Long userId) {
-        List<prog_ronde> progRondes = progRondeRepository.findByUserId(userId);
+    public List<Prog_ronde> findProgRondeByUserId(Long userId) {
+        List<Prog_ronde> progRondes = progRondeRepository.findByUserId(userId);
         if (progRondes.isEmpty())
             throw new ApiRequestException("Pas de programmation trouvée pour cet utilisateur");
         return progRondes;
     }
 
     @Override
-    public List<prog_ronde> findProgRondeByStatus(Status status) {
-        List<prog_ronde> progRondes = progRondeRepository.findByStatus(status);
+    public List<Prog_ronde> findProgRondeByStatus(Status status) {
+        List<Prog_ronde> progRondes = progRondeRepository.findByStatus(status);
         if (progRondes.isEmpty())
             throw new ApiRequestException("Pas de programmation trouvée avec ce statut");
         return progRondes;
     }
 
     @Override
-    public List<prog_ronde> findProgRondeByTerminalId(Long terminalId) {
+    public List<Prog_ronde> findProgRondeByTerminalId(Long terminalId) {
         refTerminalService.findTerminalById(terminalId); // Vérifie si le terminal existe
-        List<prog_ronde> progRondes = progRondeRepository.findByTerminalId(terminalId);
+        List<Prog_ronde> progRondes = progRondeRepository.findByTerminalId(terminalId);
         if (progRondes.isEmpty())
             throw new ApiRequestException("Pas de programmation trouvée pour ce terminal");
         return progRondes;
@@ -153,7 +153,7 @@ public class ProgRondeServiceImpl implements ProgRondeService {
 
     @Override
     public void deleteProgRondeById(Long id) {
-        prog_ronde prog_ronde = progRondeRepository.findByIdProgRonde(id);
+        Prog_ronde prog_ronde = progRondeRepository.findByIdProgRonde(id);
         if (prog_ronde == null)
             throw new ApiRequestException("ProgRonde non trouvé");
         progRondeRepository.deleteById(id);

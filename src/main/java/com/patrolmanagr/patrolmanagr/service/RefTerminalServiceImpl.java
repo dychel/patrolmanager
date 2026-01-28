@@ -1,7 +1,9 @@
 package com.patrolmanagr.patrolmanagr.service;
 
+import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.dto.Ref_siteDTO;
 import com.patrolmanagr.patrolmanagr.dto.Ref_terminalDTO;
+import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_site;
 import com.patrolmanagr.patrolmanagr.entity.Ref_terminal;
 import com.patrolmanagr.patrolmanagr.entity.Ref_vendor_api;
@@ -32,6 +34,14 @@ public class RefTerminalServiceImpl implements RefTerminalService{
     public Ref_terminal saveTerminal(Ref_terminalDTO ref_terminalDTO) {
         Ref_terminal ref_terminal = modelMapper.map(ref_terminalDTO, Ref_terminal.class);
         ref_terminal.setCreated_by(userService.getConnectedUserId());
+
+        // Mettre à jour les clés étrangères
+        updateForeignKeySite_VendorApi(ref_terminalDTO, ref_terminal);
+
+        // Initialiser le statut si non fourni
+        if (ref_terminal.getStatus() == null) {
+            ref_terminal.setStatus(Status.ACTIVE);
+        }
         return refTerminalRepository.save(ref_terminal);
     }
 

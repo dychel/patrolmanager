@@ -2,8 +2,7 @@ package com.patrolmanagr.patrolmanagr.service;
 
 import com.patrolmanagr.patrolmanagr.config.Status_exec_Ronde;
 import com.patrolmanagr.patrolmanagr.dto.ExecRondeDTO;
-import com.patrolmanagr.patrolmanagr.entity.exec_ronde;
-import com.patrolmanagr.patrolmanagr.config.Status;
+import com.patrolmanagr.patrolmanagr.entity.Exec_ronde;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,39 +11,39 @@ import java.util.List;
 
 public interface ExecRondeService {
 
-    exec_ronde saveExecRonde(ExecRondeDTO execRondeDTO);
+    Exec_ronde saveExecRonde(ExecRondeDTO execRondeDTO);
 
-    exec_ronde updateExecRonde(Long id, ExecRondeDTO execRondeDTO);
+    Exec_ronde updateExecRonde(Long id, ExecRondeDTO execRondeDTO);
 
-    exec_ronde findExecRondeById(Long id);
+    Exec_ronde findExecRondeById(Long id);
 
-    List<exec_ronde> listExecRonde();
+    List<Exec_ronde> listExecRonde();
 
-    List<exec_ronde> findExecRondeByProgRondeId(Long progRondeId);
+    List<Exec_ronde> findExecRondeByProgRondeId(Long progRondeId);
 
-    List<exec_ronde> findExecRondeByRefRondeId(Long refRondeId);
+    List<Exec_ronde> findExecRondeByRefRondeId(Long refRondeId);
 
-    List<exec_ronde> findExecRondeBySiteId(Long siteId);
+    List<Exec_ronde> findExecRondeBySiteId(Long siteId);
 
-    List<exec_ronde> findExecRondeByExecDate(LocalDate execDate);
+    List<Exec_ronde> findExecRondeByExecDate(LocalDate execDate);
 
-    List<exec_ronde> findExecRondeByStatus(Status_exec_Ronde status);
+    List<Exec_ronde> findExecRondeByStatus(Status_exec_Ronde status);
 
-    List<exec_ronde> findExecRondeBySiteIdAndExecDate(Long siteId, LocalDate execDate);
+    List<Exec_ronde> findExecRondeBySiteIdAndExecDate(Long siteId, LocalDate execDate);
 
-    List<exec_ronde> findExecRondeByExecDateAndStatus(LocalDate execDate, Status_exec_Ronde status);
+    List<Exec_ronde> findExecRondeByExecDateAndStatus(LocalDate execDate, Status_exec_Ronde status);
 
-    List<exec_ronde> findExecRondeBySiteIdAndExecDateAndStatus(Long siteId, LocalDate execDate, Status_exec_Ronde status);
+    List<Exec_ronde> findExecRondeBySiteIdAndExecDateAndStatus(Long siteId, LocalDate execDate, Status_exec_Ronde status);
 
-    List<exec_ronde> findExecRondeByPlannedStartAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<Exec_ronde> findExecRondeByPlannedStartAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     void deleteExecRondeById(Long id);
 
-    exec_ronde updateExecRondeStatus(Long id, Status_exec_Ronde status, BigDecimal completionRate);
+    Exec_ronde updateExecRondeStatus(Long id, Status_exec_Ronde status, BigDecimal completionRate);
 
-    exec_ronde startExecRonde(Long id);
+    Exec_ronde startExecRonde(Long id);
 
-    exec_ronde endExecRonde(Long id, BigDecimal completionRate);
+    Exec_ronde endExecRonde(Long id, BigDecimal completionRate);
 
-    exec_ronde updateLastEvent(Long id);
+    Exec_ronde updateLastEvent(Long id);
 }

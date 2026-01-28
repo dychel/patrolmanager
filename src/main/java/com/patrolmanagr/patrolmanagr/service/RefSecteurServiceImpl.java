@@ -1,6 +1,8 @@
 package com.patrolmanagr.patrolmanagr.service;
+import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.dto.Ref_secteurDTO;
 import com.patrolmanagr.patrolmanagr.dto.Ref_siteDTO;
+import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_secteur;
 import com.patrolmanagr.patrolmanagr.entity.Ref_site;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
@@ -27,8 +29,15 @@ public class RefSecteurServiceImpl implements RefSecteurService{
     public Ref_secteur saveSecteur(Ref_secteurDTO ref_secteurDTO) {
         Ref_secteur ref_secteur = modelMapper.map(ref_secteurDTO, Ref_secteur.class);
         ref_secteur.setCreated_by(userService.getConnectedUserId());
-        return refSecteurRepository.save(ref_secteur);
-    }
+
+        // Mettre à jour les clés étrangères
+        updateForeignKeySite(ref_secteurDTO, ref_secteur);
+
+        // Initialiser le statut si non fourni
+        if (ref_secteur.getStatus() == null) {
+            ref_secteur.setStatus(Status.ACTIVE);
+        }
+        return refSecteurRepository.save(ref_secteur);    }
 
     @Override
     public Ref_secteur updateSecteur(Long id, Ref_secteurDTO ref_secteurDTO) {

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RefRondePastilleDTO {
 
+    private Long id;
     private Long refRondeId;
     private Long refPastilleId;
     private Integer seq_no;

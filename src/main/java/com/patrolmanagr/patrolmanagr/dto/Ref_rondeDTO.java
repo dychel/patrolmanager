@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Ref_rondeDTO {
 
+    private Long id;
     private String code;
     private String name;
     private Long siteId;

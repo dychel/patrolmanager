@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Ref_pastilleDTO {
-
+    private Long id;
     private String code;
     private String label;
     private Long refSiteId;

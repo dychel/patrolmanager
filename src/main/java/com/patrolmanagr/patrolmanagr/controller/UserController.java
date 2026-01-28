@@ -26,7 +26,7 @@ import java.util.Objects;
 
 @RestController
 @CrossOrigin(origins = {"*"}, maxAge = 3600)
-@RequestMapping("/api/patrolmanagr/user/*")
+@RequestMapping("/api/v1/patrolmanagr/user/*")
 public class UserController {
 
     @Autowired

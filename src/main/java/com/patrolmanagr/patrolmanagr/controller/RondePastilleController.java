@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin(origins = {"*"}, maxAge = 3600)
-@RequestMapping("/api/patrolmanagr/ronde-pastille/*")
+@RequestMapping("/api/v1/patrolmanagr/ronde-pastille/*")
 public class RondePastilleController {
 
     @Autowired

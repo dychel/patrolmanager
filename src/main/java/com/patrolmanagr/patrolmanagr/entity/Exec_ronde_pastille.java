@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
                 @Index(name = "IDX_erp_exec_seq", columnList = "exec_ronde_id, seq_no"),
                 @Index(name = "IDX_erp_pastille", columnList = "pastille_id")
         })
-public class exec_ronde_pastille {
+public class Exec_ronde_pastille {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,13 +23,13 @@ public class exec_ronde_pastille {
 
     @ManyToOne
     @JoinColumn(name = "exec_ronde_id", nullable = false)
-    private exec_ronde execRonde;
+    private Exec_ronde execRonde;
 
     @ManyToOne
     @JoinColumn(name = "pastille_id", nullable = false)
     private Ref_pastille pastille;
 
-    @Column(name = "seq_no", nullable = false)
+    @Column(name = "seq_no")
     private Integer seqNo;
 
     @Column(name = "expected_travel_sec")

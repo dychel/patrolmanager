@@ -1,8 +1,8 @@
 package com.patrolmanagr.patrolmanagr.service;
 import com.patrolmanagr.patrolmanagr.config.Status_exec_Ronde;
 import com.patrolmanagr.patrolmanagr.dto.ExecRondeDTO;
-import com.patrolmanagr.patrolmanagr.entity.exec_ronde;
-import com.patrolmanagr.patrolmanagr.entity.prog_ronde;
+import com.patrolmanagr.patrolmanagr.entity.Exec_ronde;
+import com.patrolmanagr.patrolmanagr.entity.Prog_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Ref_site;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
@@ -40,7 +40,7 @@ public class ExecRondeServiceImpl implements ExecRondeService {
     RefSiteService refSiteService;
 
     @Override
-    public exec_ronde saveExecRonde(ExecRondeDTO execRondeDTO) {
+    public Exec_ronde saveExecRonde(ExecRondeDTO execRondeDTO) {
         // Vérifier la contrainte d'unicité
         boolean exists = execRondeRepository.existsByProgRondeAndPlannedStartAt(
                 execRondeDTO.getProgRondeId(),
@@ -56,7 +56,7 @@ public class ExecRondeServiceImpl implements ExecRondeService {
             throw new ApiRequestException("La date de fin prévue doit être après la date de début prévue");
         }
 
-        exec_ronde exec_ronde = modelMapper.map(execRondeDTO, exec_ronde.class);
+        Exec_ronde exec_ronde = modelMapper.map(execRondeDTO, Exec_ronde.class);
         exec_ronde.setCreated_by(userService.getConnectedUserId());
         exec_ronde.setCreated_at(LocalDateTime.now());
 
@@ -72,8 +72,8 @@ public class ExecRondeServiceImpl implements ExecRondeService {
     }
 
     @Override
-    public exec_ronde updateExecRonde(Long id, ExecRondeDTO execRondeDTO) {
-        exec_ronde execRondeToUpdate = execRondeRepository.findByIdExecRonde(id);
+    public Exec_ronde updateExecRonde(Long id, ExecRondeDTO execRondeDTO) {
+        Exec_ronde execRondeToUpdate = execRondeRepository.findByIdExecRonde(id);
         if (execRondeToUpdate == null)
             throw new ApiRequestException("ExecRonde ID non trouvé");
 
@@ -96,7 +96,7 @@ public class ExecRondeServiceImpl implements ExecRondeService {
             throw new ApiRequestException("La date de fin prévue doit être après la date de début prévue");
         }
 
-        exec_ronde exec_ronde = modelMapper.map(execRondeDTO, exec_ronde.class);
+        Exec_ronde exec_ronde = modelMapper.map(execRondeDTO, Exec_ronde.class);
         exec_ronde.setId(id);
         exec_ronde.setUpdated_at(LocalDateTime.now());
         exec_ronde.setUpdated_by(userService.getConnectedUserId());
@@ -109,10 +109,10 @@ public class ExecRondeServiceImpl implements ExecRondeService {
         return execRondeRepository.save(exec_ronde);
     }
 
-    private void updateForeignKeys(ExecRondeDTO execRondeDTO, exec_ronde exec_ronde) {
+    private void updateForeignKeys(ExecRondeDTO execRondeDTO, Exec_ronde exec_ronde) {
         // Mettre à jour id ProgRonde
         if (execRondeDTO.getProgRondeId() != null) {
-            prog_ronde progRonde = progRondeService.findProgRondeById(execRondeDTO.getProgRondeId());
+            Prog_ronde progRonde = progRondeService.findProgRondeById(execRondeDTO.getProgRondeId());
             exec_ronde.setProgRonde(progRonde);
         }
 
@@ -130,97 +130,97 @@ public class ExecRondeServiceImpl implements ExecRondeService {
     }
 
     @Override
-    public exec_ronde findExecRondeById(Long id) {
-        exec_ronde execRondeToUpdate = execRondeRepository.findByIdExecRonde(id);
+    public Exec_ronde findExecRondeById(Long id) {
+        Exec_ronde execRondeToUpdate = execRondeRepository.findByIdExecRonde(id);
         if (execRondeToUpdate == null)
             throw new ApiRequestException("ExecRonde non trouvé");
         return execRondeToUpdate;
     }
 
     @Override
-    public List<exec_ronde> listExecRonde() {
-        List<exec_ronde> exec_rondes = execRondeRepository.findAll();
-        if (exec_rondes.isEmpty())
+    public List<Exec_ronde> listExecRonde() {
+        List<Exec_ronde> Exec_rondes = execRondeRepository.findAll();
+        if (Exec_rondes.isEmpty())
             throw new ApiRequestException("Pas d'exécutions de ronde enregistrées dans la base de données");
-        return exec_rondes;
+        return Exec_rondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeByProgRondeId(Long progRondeId) {
+    public List<Exec_ronde> findExecRondeByProgRondeId(Long progRondeId) {
         progRondeService.findProgRondeById(progRondeId); // Vérifie si la programmation existe
-        List<exec_ronde> execRondes = execRondeRepository.findByProgRondeId(progRondeId);
+        List<Exec_ronde> execRondes = execRondeRepository.findByProgRondeId(progRondeId);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour cette programmation");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeByRefRondeId(Long refRondeId) {
+    public List<Exec_ronde> findExecRondeByRefRondeId(Long refRondeId) {
         refRondeService.findRondeById(refRondeId); // Vérifie si la ronde existe
-        List<exec_ronde> execRondes = execRondeRepository.findByRefRondeId(refRondeId);
+        List<Exec_ronde> execRondes = execRondeRepository.findByRefRondeId(refRondeId);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour cette ronde");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeBySiteId(Long siteId) {
+    public List<Exec_ronde> findExecRondeBySiteId(Long siteId) {
         refSiteService.findSiteById(siteId); // Vérifie si le site existe
-        List<exec_ronde> execRondes = execRondeRepository.findBySiteId(siteId);
+        List<Exec_ronde> execRondes = execRondeRepository.findBySiteId(siteId);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour ce site");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeByExecDate(LocalDate execDate) {
-        List<exec_ronde> execRondes = execRondeRepository.findByExecDate(execDate);
+    public List<Exec_ronde> findExecRondeByExecDate(LocalDate execDate) {
+        List<Exec_ronde> execRondes = execRondeRepository.findByExecDate(execDate);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour cette date");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeByStatus(Status_exec_Ronde status) {
-        List<exec_ronde> execRondes = execRondeRepository.findByStatus(status);
+    public List<Exec_ronde> findExecRondeByStatus(Status_exec_Ronde status) {
+        List<Exec_ronde> execRondes = execRondeRepository.findByStatus(status);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée avec ce statut");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeBySiteIdAndExecDate(Long siteId, LocalDate execDate) {
+    public List<Exec_ronde> findExecRondeBySiteIdAndExecDate(Long siteId, LocalDate execDate) {
         refSiteService.findSiteById(siteId); // Vérifie si le site existe
-        List<exec_ronde> execRondes = execRondeRepository.findBySiteIdAndExecDate(siteId, execDate);
+        List<Exec_ronde> execRondes = execRondeRepository.findBySiteIdAndExecDate(siteId, execDate);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour ce site et cette date");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeByExecDateAndStatus(LocalDate execDate, Status_exec_Ronde status) {
-        List<exec_ronde> execRondes = execRondeRepository.findByExecDateAndStatus(execDate, status);
+    public List<Exec_ronde> findExecRondeByExecDateAndStatus(LocalDate execDate, Status_exec_Ronde status) {
+        List<Exec_ronde> execRondes = execRondeRepository.findByExecDateAndStatus(execDate, status);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour cette date et ce statut");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeBySiteIdAndExecDateAndStatus(Long siteId, LocalDate execDate, Status_exec_Ronde status) {
+    public List<Exec_ronde> findExecRondeBySiteIdAndExecDateAndStatus(Long siteId, LocalDate execDate, Status_exec_Ronde status) {
         refSiteService.findSiteById(siteId); // Vérifie si le site existe
-        List<exec_ronde> execRondes = execRondeRepository.findBySiteIdAndExecDateAndStatus(siteId, execDate, status);
+        List<Exec_ronde> execRondes = execRondeRepository.findBySiteIdAndExecDateAndStatus(siteId, execDate, status);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée pour ce site, cette date et ce statut");
         return execRondes;
     }
 
     @Override
-    public List<exec_ronde> findExecRondeByPlannedStartAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<Exec_ronde> findExecRondeByPlannedStartAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
         if (startDate.isAfter(endDate)) {
             throw new ApiRequestException("La date de début doit être avant la date de fin");
         }
 
-        List<exec_ronde> execRondes = execRondeRepository.findByPlannedStartAtBetween(startDate, endDate);
+        List<Exec_ronde> execRondes = execRondeRepository.findByPlannedStartAtBetween(startDate, endDate);
         if (execRondes.isEmpty())
             throw new ApiRequestException("Pas d'exécution trouvée dans cette période");
         return execRondes;
@@ -228,15 +228,15 @@ public class ExecRondeServiceImpl implements ExecRondeService {
 
     @Override
     public void deleteExecRondeById(Long id) {
-        exec_ronde exec_ronde = execRondeRepository.findByIdExecRonde(id);
+        Exec_ronde exec_ronde = execRondeRepository.findByIdExecRonde(id);
         if (exec_ronde == null)
             throw new ApiRequestException("ExecRonde non trouvé");
         execRondeRepository.deleteById(id);
     }
 
     @Override
-    public exec_ronde updateExecRondeStatus(Long id, Status_exec_Ronde status, BigDecimal completionRate) {
-        exec_ronde execRonde = findExecRondeById(id);
+    public Exec_ronde updateExecRondeStatus(Long id, Status_exec_Ronde status, BigDecimal completionRate) {
+        Exec_ronde execRonde = findExecRondeById(id);
 
         // Validation du taux de complétion
         if (completionRate != null &&
@@ -253,8 +253,8 @@ public class ExecRondeServiceImpl implements ExecRondeService {
     }
 
     @Override
-    public exec_ronde startExecRonde(Long id) {
-        exec_ronde execRonde = findExecRondeById(id);
+    public Exec_ronde startExecRonde(Long id) {
+        Exec_ronde execRonde = findExecRondeById(id);
 
         if (execRonde.getStatus() == Status_exec_Ronde.IN_PROGRESS) {
             throw new ApiRequestException("Cette exécution est déjà en cours");
@@ -274,8 +274,8 @@ public class ExecRondeServiceImpl implements ExecRondeService {
     }
 
     @Override
-    public exec_ronde endExecRonde(Long id, BigDecimal completionRate) {
-        exec_ronde execRonde = findExecRondeById(id);
+    public Exec_ronde endExecRonde(Long id, BigDecimal completionRate) {
+        Exec_ronde execRonde = findExecRondeById(id);
 
         if (execRonde.getStatus() != Status_exec_Ronde.IN_PROGRESS) {
             throw new ApiRequestException("Seule une exécution en cours peut être terminée");
@@ -299,8 +299,8 @@ public class ExecRondeServiceImpl implements ExecRondeService {
     }
 
     @Override
-    public exec_ronde updateLastEvent(Long id) {
-        exec_ronde execRonde = findExecRondeById(id);
+    public Exec_ronde updateLastEvent(Long id) {
+        Exec_ronde execRonde = findExecRondeById(id);
         execRonde.setLastEventAt(LocalDateTime.now());
         return execRondeRepository.save(execRonde);
     }
