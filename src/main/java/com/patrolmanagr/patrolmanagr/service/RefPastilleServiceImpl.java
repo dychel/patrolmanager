@@ -80,10 +80,10 @@ public class RefPastilleServiceImpl implements RefPastilleService {
     }
 
     @Override
-    public Ref_pastille findPastilleByIdSite(Long id) {
+    public List<Ref_pastille> findPastilleByIdSite(Long id) {
         Ref_site ref_site = refSiteService.findSiteById(id);
         if (ref_site==null)
-            throw new ApiRequestException("Pas de pastille enregisté avec cet ID dans ce site");
+            throw new ApiRequestException("Pas de pastilles enregisté avec cet ID dans ce site");
         return refPastilleRepository.findByIdSite(id);
     }
 

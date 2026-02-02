@@ -1,4 +1,5 @@
 package com.patrolmanagr.patrolmanagr.entity;
+
 import com.patrolmanagr.patrolmanagr.config.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,24 +12,23 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-public class Ref_site {
+@Table(name = "ref_client")
+public class Ref_client {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String code;
     private String name;
-    @ManyToOne
-    @JoinColumn(name = "ref_zone_id")
-    private Ref_zone ref_zone;
-    private String client_name;
-    @ManyToOne
-    @JoinColumn(name = "ref_client_id")
-    private Ref_client ref_client;
+    private String email;
+    private String telephone;
+    private String adresse;
+
     private Status status;
     private String audit_field;
 
-    //champs historique activtés
+    // Champs historique
     private LocalDateTime created_at = LocalDateTime.now();
     private Long created_by;
     private LocalDateTime updated_at;
@@ -36,6 +36,4 @@ public class Ref_site {
     private Boolean is_deleted = false;
     private LocalDateTime deleted_at;
     private Long deleted_by;
-
 }
-

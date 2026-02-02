@@ -1,5 +1,4 @@
 package com.patrolmanagr.patrolmanagr.security;
-
 import com.patrolmanagr.patrolmanagr.security.jwt.JwtAuthTokenFilter;
 import com.patrolmanagr.patrolmanagr.security.jwt.JwtAuthEntryPoint;
 import com.patrolmanagr.patrolmanagr.security.service.UserDetailsServiceImpl;
@@ -47,6 +46,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/user/forgot-password").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/user/reset-password").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/user/add").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/user/all").permitAll()
 
                 // Routes Role publiques
                 .requestMatchers("/api/v1/patrolmanagr/role/add").permitAll()
@@ -58,6 +58,16 @@ public class WebSecurityConfig {
                 // Routes Site publiques
                 .requestMatchers("/api/v1/patrolmanagr/site/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/site/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/site/findbyid/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/site/findbyzone/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/site/findbyclient/{id}").permitAll()
+
+                // Routes Site publiques
+                .requestMatchers("/api/v1/patrolmanagr/client/add").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/client/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/client/findbyid/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/client/findbyzone/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/client/update/{id}").permitAll()
 
                 // Routes VendorAPI publiques
                 .requestMatchers("/api/v1/patrolmanagr/vendorapi/add").permitAll()
@@ -70,6 +80,11 @@ public class WebSecurityConfig {
                 // Routes Ronde publiques
                 .requestMatchers("/api/v1/patrolmanagr/ronde/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ronde/findbysite/{siteId}").permitAll()
+                // Ajoutez ces lignes dans la configuration
+                .requestMatchers("/api/v1/patrolmanagr/ronde/update/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ronde/delete/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ronde/findbyid/**").permitAll()
 
                 // Routes Secteur publiques
                 .requestMatchers("/api/v1/patrolmanagr/secteur/add").permitAll()
@@ -78,12 +93,13 @@ public class WebSecurityConfig {
                 // Routes Pastille publiques
                 .requestMatchers("/api/v1/patrolmanagr/pastille/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/pastille/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/findbysite/{siteId}").permitAll()
 
                 // Routes Ronde-Pastille publiques (pour les associations)
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/all").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/findbyid/**").permitAll()
-                .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/findbyronde/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/findbypastillebyronde/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/findbypastille/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/findbyrondeandsequence/**").permitAll()
 

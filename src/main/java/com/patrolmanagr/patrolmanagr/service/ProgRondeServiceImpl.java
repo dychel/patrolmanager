@@ -67,14 +67,12 @@ public class ProgRondeServiceImpl implements ProgRondeService {
     private void updateForeignKeys(ProgRondeDTO progRondeDTO, Prog_ronde prog_ronde) {
         // Mettre à jour id Ronde
         if (progRondeDTO.getRefRondeId() != null) {
-            Ref_ronde ronde = refRondeService.findRondeById(progRondeDTO.getRefRondeId());
-            prog_ronde.setRef_ronde(ronde);
+            prog_ronde.setRef_ronde(refRondeService.findRondeById(progRondeDTO.getRefRondeId()));
         }
 
         // Mettre à jour id Site
         if (progRondeDTO.getRefSiteId() != null) {
-            Ref_site site = refSiteService.findSiteById(progRondeDTO.getRefSiteId());
-            prog_ronde.setRef_site(site);
+            prog_ronde.setRef_site(refSiteService.findSiteById(progRondeDTO.getRefSiteId()));
         }
 
         // Mettre à jour id Agent (User)

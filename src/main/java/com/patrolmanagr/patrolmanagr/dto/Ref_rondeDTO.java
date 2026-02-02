@@ -1,10 +1,9 @@
 package com.patrolmanagr.patrolmanagr.dto;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -15,8 +14,19 @@ public class Ref_rondeDTO {
     private String code;
     private String name;
     private Long siteId;
-    private int expected_duration_min;
-    private int delay_tolerance_sec;
+    private Integer expected_duration_min;
+    private Integer delay_tolerance_sec;
+
+    // NOUVEAU : Jours de la semaine
+    private String joursSemaine; // Format: "L,Ma,Me,J,V,S,D"
+
+    private String date;
+
+    // NOUVEAUX CHAMPS AJOUTÉS
+    private LocalTime heure_debut;
+    private LocalTime heure_fin;
+    private Integer duree_theorique;
+
     private Long status;
     private String audit_field;
 }

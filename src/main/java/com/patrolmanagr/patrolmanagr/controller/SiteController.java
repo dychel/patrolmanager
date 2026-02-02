@@ -34,6 +34,20 @@ public class SiteController {
         return new ResponseEntity<ResponseMessage>(new ResponseMessage("ok", "site trouvé", ref_site), HttpStatus.OK);
     }
 
+    @GetMapping("findbyidzone/{zoneId}")
+    public ResponseEntity<ResponseMessage> findSiteByIdZone(@PathVariable(value = "zoneId") Long zoneId){
+        Ref_site ref_site = refSiteService.findSiteByIdZone(zoneId);
+        return new ResponseEntity<ResponseMessage>(new ResponseMessage("ok", "site trouvé par zone", ref_site), HttpStatus.OK);
+    }
+
+
+    @GetMapping("findbyclient/{zoneId}")
+    public ResponseEntity<ResponseMessage> findSiteByIdClient(@PathVariable(value = "clientId") Long clientId){
+        Ref_site ref_site = refSiteService.findSiteByIdClient(clientId);
+        return new ResponseEntity<ResponseMessage>(new ResponseMessage("ok", "Site trouve pour ce client", ref_site), HttpStatus.OK);
+    }
+
+
     @DeleteMapping(value = "/delete/{id}")
     public ResponseEntity<?> deleteSite(@PathVariable(value = "id") Long id) {
         refSiteService.deleteSiteById(id);

@@ -15,6 +15,9 @@ public interface RefSiteRepository extends JpaRepository<Ref_site, Long> {
     Ref_site findByName(@Param("name") String name);
     @Query("select ref_site from Ref_site ref_site where ref_site.code = :code")
     Ref_site findByCode(@Param("code") String code);
-    @Query("select ref_site from Ref_site ref_site where ref_site.ref_zone.id = :id")
-    Ref_site findSiteByZone(@PathVariable("id") Long id);
+    @Query("select ref_site from Ref_site ref_site where ref_site.ref_zone.id = :zoneId")
+    Ref_site findSiteByZone(@Param("zoneId") Long zoneId);
+
+    @Query("select ref_site from Ref_site ref_site where ref_site.ref_client.id = :clientId")
+    Ref_site findSiteByClient(@Param("clientId") Long clientId);
 }

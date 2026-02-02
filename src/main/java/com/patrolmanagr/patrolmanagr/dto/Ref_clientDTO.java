@@ -1,22 +1,20 @@
 package com.patrolmanagr.patrolmanagr.dto;
-import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Ref_siteDTO {
+public class Ref_clientDTO {
 
     private Long id;
     private String code;
     private String name;
-    private Long zoneId;
-    private String client_name;
-    private Long clientId;
+    private String email;
+    private String telephone;
+    private String adresse;
     private Long status;
     private String audit_field;
 }

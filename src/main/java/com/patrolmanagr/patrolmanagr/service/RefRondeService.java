@@ -11,6 +11,6 @@ public interface RefRondeService {
     Ref_ronde updateRonde(Long id, Ref_rondeDTO ref_rondeDTO);
     Ref_ronde findRondeById(Long id);
     List<Ref_ronde> listRonde();
-    Ref_ronde findRondeByIdSite(Long id);
+    List<Ref_ronde> findRondeByIdSite(Long id);
     void deleteRondeById(Long id);
 }

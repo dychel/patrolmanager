@@ -9,5 +9,6 @@ public interface RefSiteService {
     Ref_site findSiteById(Long id);
     List<Ref_site> listSites();
     Ref_site findSiteByIdZone(Long id);
+    Ref_site findSiteByIdClient(Long id);
     void deleteSiteById(Long id);
 }

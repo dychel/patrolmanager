@@ -17,13 +17,20 @@ public class Ref_pastille {
     private Long id;
     private String code;
     private String label;
+
     @ManyToOne
     @JoinColumn(name = "ref_site_id")
     private Ref_site ref_site_id;
+
     @ManyToOne
     @JoinColumn(name = "ref_secteur_id")
     private Ref_secteur ref_secteur_id;
+
     private String external_uid;
+
+    @Column(name = "temps_theorique")
+    private Integer tempsTheorique; // Temps théorique en secondes
+
     private Status status;
     private String audit_field;
 

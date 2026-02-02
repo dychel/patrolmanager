@@ -39,7 +39,7 @@ public class RondePastilleController {
                 "Association Ronde-Pastille trouvée", ref_ronde_pastille), HttpStatus.OK);
     }
 
-    @GetMapping("findbyronde/{rondeId}")
+    @GetMapping("findbypastillebyronde/{rondeId}")
     public ResponseEntity<ResponseMessage> findRondePastilleByRondeId(@PathVariable(value = "rondeId") Long rondeId) {
         List<Ref_ronde_pastille> rondePastilles = refRondePastilleService.findRondePastilleByRondeId(rondeId);
         return new ResponseEntity<>(new ResponseMessage("ok",

@@ -17,6 +17,7 @@ public class Ref_pastilleDTO {
     private Long refSiteId;
     private Long refSecteurId;
     private String external_uid;
+    private Integer tempsTheorique; // Temps théorique en secondes
     private Status status;
     private String audit_field;
 }

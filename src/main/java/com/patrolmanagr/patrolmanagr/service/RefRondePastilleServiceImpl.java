@@ -115,6 +115,11 @@ public class RefRondePastilleServiceImpl implements RefRondePastilleService {
     }
 
     @Override
+    public List<Ref_pastille> listPastille() {
+        return List.of();
+    }
+
+    @Override
     public List<Ref_ronde_pastille> findRondePastilleByRondeId(Long rondeId) {
         // Vérifier d'abord si la ronde existe
         refRondeService.findRondeById(rondeId);

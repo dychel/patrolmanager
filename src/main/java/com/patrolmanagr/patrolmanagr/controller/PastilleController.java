@@ -1,12 +1,16 @@
 package com.patrolmanagr.patrolmanagr.controller;
 import com.patrolmanagr.patrolmanagr.dto.Ref_pastilleDTO;
+import com.patrolmanagr.patrolmanagr.entity.Exec_ronde_pastille;
 import com.patrolmanagr.patrolmanagr.entity.Ref_pastille;
+import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.response.ResponseMessage;
 import com.patrolmanagr.patrolmanagr.service.RefPastilleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = {"*"}, maxAge = 3600)
@@ -32,6 +36,13 @@ public class PastilleController {
     public ResponseEntity<ResponseMessage> findPastilleById(@PathVariable(value = "id") Long id){
         Ref_pastille ref_pastille = refPastilleService.findPastilleById(id);
         return new ResponseEntity<ResponseMessage>(new ResponseMessage("ok", "Pastille trouvé", ref_pastille), HttpStatus.OK);
+    }
+
+    @GetMapping("findbysite/{siteId}")
+    public ResponseEntity<ResponseMessage> findByPastillesiteSiteId(@PathVariable(value = "siteId") Long siteId) {
+        List<Ref_pastille> execRondePastilles = refPastilleService.findPastilleByIdSite(siteId);
+        return new ResponseEntity<>(new ResponseMessage("ok",
+                "Liste des pastilles pour le site Numero " + siteId, execRondePastilles), HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/delete/{id}")
