@@ -37,6 +37,13 @@ public class RefRondeServiceImpl implements RefRondeService {
             ref_ronde.setStatus(Status.ACTIVE);
         }
 
+        //Ajout clientName et siteName.
+        Ref_site ref_site = refSiteService.findSiteById(ref_rondeDTO.getSiteId());
+        if (ref_site!=null){
+            ref_ronde.setSiteName(ref_site.getName());
+            ref_ronde.setClientName(ref_site.getClient_name());
+        }
+
         // Initialiser les jours si non fourni
         if (ref_ronde.getJoursSemaine() == null || ref_ronde.getJoursSemaine().isEmpty()) {
             ref_ronde.setJoursSemaine("L,Ma,Me,J,V,S,D"); // Tous les jours par défaut
@@ -62,6 +69,13 @@ public class RefRondeServiceImpl implements RefRondeService {
         // Conserver les champs non modifiés
         ref_ronde.setCreated_at(refRondeToUpdate.getCreated_at());
         ref_ronde.setCreated_by(refRondeToUpdate.getCreated_by());
+
+        //Ajout clientName et siteName.
+        Ref_site ref_site = refSiteService.findSiteById(ref_rondeDTO.getSiteId());
+        if (ref_site!=null){
+            ref_ronde.setSiteName(ref_site.getName());
+            ref_ronde.setClientName(ref_site.getClient_name());
+        }
 
         return refRondeRepository.save(ref_ronde);
     }

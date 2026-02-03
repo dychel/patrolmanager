@@ -22,7 +22,6 @@ public class Ref_ronde {
     private Long id;
 
     private String code;
-    private String name;
 
     @ManyToOne
     @JoinColumn(name = "ref_site_id")
@@ -53,6 +52,9 @@ public class Ref_ronde {
     // NOUVEAU CHAMP : Jours de la semaine
     @Column(name = "jours_semaine", length = 50)
     private String joursSemaine; // Format: "L,Ma,Me,J,V,S,D"
+
+    private String siteName;
+    private String clientName;
 
     // Champs historique activités
     private LocalDateTime created_at = LocalDateTime.now();

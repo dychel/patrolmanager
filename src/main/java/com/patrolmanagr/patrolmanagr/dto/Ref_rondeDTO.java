@@ -12,7 +12,6 @@ public class Ref_rondeDTO {
 
     private Long id;
     private String code;
-    private String name;
     private Long siteId;
     private Integer expected_duration_min;
     private Integer delay_tolerance_sec;
@@ -29,4 +28,6 @@ public class Ref_rondeDTO {
 
     private Long status;
     private String audit_field;
+    private String siteName;
+    private String clientName;
 }

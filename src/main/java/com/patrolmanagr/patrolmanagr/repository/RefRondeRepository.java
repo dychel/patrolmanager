@@ -21,6 +21,6 @@ public interface RefRondeRepository extends JpaRepository<Ref_ronde, Long>  {
     @Query("select ref_ronde from Ref_ronde ref_ronde where ref_ronde.code = :code")
     Ref_ronde findByCode(@Param("code") String code);
 
-    @Query("select ref_ronde from Ref_ronde ref_ronde where ref_ronde.name = :name")
-    Ref_ronde findByName(@Param("name") String name);
+//    @Query("select ref_ronde from Ref_ronde ref_ronde where ref_ronde.name = :name")
+//    Ref_ronde findByName(@Param("name") String name);
 }

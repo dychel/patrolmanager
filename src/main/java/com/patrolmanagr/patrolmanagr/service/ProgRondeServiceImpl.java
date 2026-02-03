@@ -35,7 +35,6 @@ public class ProgRondeServiceImpl implements ProgRondeService {
 
         // Mettre à jour les clés étrangères
         updateForeignKeys(progRondeDTO, prog_ronde);
-
         // Initialiser le statut si non fourni
         if (prog_ronde.getStatus() == null) {
             prog_ronde.setStatus(Status.ACTIVE);

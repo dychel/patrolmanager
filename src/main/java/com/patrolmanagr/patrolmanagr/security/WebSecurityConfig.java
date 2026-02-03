@@ -94,6 +94,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/pastille/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/pastille/all").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/pastille/findbysite/{siteId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/update/{id}").permitAll()
 
                 // Routes Ronde-Pastille publiques (pour les associations)
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/add").permitAll()

@@ -24,7 +24,7 @@ public class RondeController {
     @PostMapping("/add")
     public ResponseEntity<?> createRonde(@RequestBody Ref_rondeDTO ref_rondeDTO) {
         refRondeSercice.saveRonde(ref_rondeDTO);
-        return new ResponseEntity<>(new ResponseMessage("ok", "ronde "+ ref_rondeDTO.getName()+ " Créé avec succès", ref_rondeDTO),
+        return new ResponseEntity<>(new ResponseMessage("ok", "ronde "+ ref_rondeDTO.getCode()+ " Créé avec succès", ref_rondeDTO),
                 HttpStatus.OK);
     }
 

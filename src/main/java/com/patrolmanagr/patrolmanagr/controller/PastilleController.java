@@ -1,5 +1,6 @@
 package com.patrolmanagr.patrolmanagr.controller;
 import com.patrolmanagr.patrolmanagr.dto.Ref_pastilleDTO;
+import com.patrolmanagr.patrolmanagr.dto.Ref_rondeDTO;
 import com.patrolmanagr.patrolmanagr.entity.Exec_ronde_pastille;
 import com.patrolmanagr.patrolmanagr.entity.Ref_pastille;
 import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -30,6 +32,20 @@ public class PastilleController {
     public ResponseEntity<?> getAllPastille() {
         return new ResponseEntity<>(new ResponseMessage("ok", "Liste des Pastille ", refPastilleService.listRef_pastille()),
                 HttpStatus.OK);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updatePastille(@PathVariable("id") Long id, @Valid @RequestBody Ref_pastilleDTO ref_pastilleDTO) {
+
+        Ref_pastille pastilleToUpdate = refPastilleService.findPastilleById(id);
+
+        if (pastilleToUpdate != null) {
+            refPastilleService.updatePastille(id, ref_pastilleDTO);
+            return new ResponseEntity<ResponseMessage>(new ResponseMessage("update", "Pastille mise a jour avec succes", ref_pastilleDTO.getCode()), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(new ResponseMessage("chao", "Pastille non trouve !", null),
+                    HttpStatus.OK);
+        }
     }
 
     @GetMapping("findbyid/{id}")
