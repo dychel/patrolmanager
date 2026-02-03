@@ -62,7 +62,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/site/findbyzone/{id}").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/site/findbyclient/{id}").permitAll()
 
-                // Routes Site publiques
+                // Routes Client publiques
                 .requestMatchers("/api/v1/patrolmanagr/client/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/client/all").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/client/findbyid/{id}").permitAll()
@@ -81,7 +81,6 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/ronde/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde/all").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde/findbysite/{siteId}").permitAll()
-                // Ajoutez ces lignes dans la configuration
                 .requestMatchers("/api/v1/patrolmanagr/ronde/update/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde/delete/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/ronde/findbyid/**").permitAll()
@@ -90,11 +89,37 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/secteur/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/secteur/all").permitAll()
 
-                // Routes Pastille publiques
+                // Routes Pastille publiques (COMPLÈTES)
                 .requestMatchers("/api/v1/patrolmanagr/pastille/add").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/pastille/all").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/pastille/findbysite/{siteId}").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/pastille/update/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/findbyid/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/findbyexternaluid/{externalUid}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/findbycode/{code}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/findbysecteur/{secteurId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/delete/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pastille/findbyexternaluids").permitAll()
+
+                // Routes Pointages publiques (NOUVELLES)
+                .requestMatchers("/api/v1/patrolmanagr/pointages/add").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/import-batch").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/findbyid/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/findbyexternaluid/{externalUid}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/findbysiteperiod/{siteId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/findbyrondeperiod/{rondeId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/findbyagent/{agentId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/pending").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/rejected").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/validate/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/reject/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/update/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/delete/{id}").permitAll()
+
+                // Routes Monitoring publiques (NOUVELLES)
+                .requestMatchers("/api/v1/patrolmanagr/monitoring/performance").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/monitoring/integrity").permitAll()
 
                 // Routes Ronde-Pastille publiques (pour les associations)
                 .requestMatchers("/api/v1/patrolmanagr/ronde-pastille/add").permitAll()

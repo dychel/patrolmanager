@@ -10,6 +10,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -116,4 +117,44 @@ public class RefRondeServiceImpl implements RefRondeService {
             throw new ApiRequestException("Ronde non trouvé");
         refRondeRepository.deleteById(id);
     }
+
+    @Override
+    public Ref_ronde findActiveRondeBySiteId(Long siteId) {
+        List<Ref_ronde> rondes = refRondeRepository.findByIdSite(siteId);
+
+        // Filtrer les rondes actives
+        List<Ref_ronde> rondesActives = rondes.stream()
+                .filter(r -> r.getStatus() == Status.ACTIVE)
+                .toList();
+
+        if (rondesActives.isEmpty()) {
+            throw new ApiRequestException("Aucune ronde active pour le site ID: " + siteId);
+        }
+
+        // Si plusieurs rondes actives, prendre la première
+        return rondesActives.get(0);
+    }
+
+    @Override
+    public Ref_ronde findRondeBySiteAndTime(Long siteId, LocalTime time) {
+        List<Ref_ronde> rondes = refRondeRepository.findByIdSite(siteId);
+
+        // Trouver la ronde dont l'horaire correspond
+        for (Ref_ronde ronde : rondes) {
+            if (ronde.getStatus() == Status.ACTIVE &&
+                    ronde.getHeure_debut() != null &&
+                    ronde.getHeure_fin() != null) {
+
+                // Vérifier si l'heure est dans la plage horaire
+                if (!time.isBefore(ronde.getHeure_debut()) &&
+                        !time.isAfter(ronde.getHeure_fin())) {
+                    return ronde;
+                }
+            }
+        }
+
+        // Sinon, retourner la première ronde active
+        return findActiveRondeBySiteId(siteId);
+    }
+
 }
