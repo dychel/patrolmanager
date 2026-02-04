@@ -77,12 +77,12 @@ public class WebSocketPointageService {
     @Transactional
     public void processBatchEveryMinute() {
         if (pointageQueue.isEmpty()) {
-            log.debug("⏰ Aucun pointage à traiter");
+            log.debug(" Aucun pointage à traiter");
             return;
         }
 
         int queueSize = pointageQueue.size();
-        log.info("🔄 Début traitement batch: {} pointage(s) en attente", queueSize);
+        log.info(" Début traitement batch: {} pointage(s) en attente", queueSize);
 
         // Extraire tous les pointages de la file
         List<WebSocketPointageDTO> batch = new ArrayList<>();
@@ -119,12 +119,12 @@ public class WebSocketPointageService {
                     successCount++;
                 } else {
                     rejectedCount++;
-                    log.warn("❌ Pointage rejeté: {} - raison: {}",
+                    log.warn(" Pointage rejeté: {} - raison: {}",
                             wsPointage.getExternalUid(), enrichedPointage.getRejectionReason());
                 }
 
             } catch (Exception e) {
-                log.error("❌ Erreur traitement pointage {}: {}",
+                log.error(" Erreur traitement pointage {}: {}",
                         wsPointage.getExternalUid(), e.getMessage());
                 rejectedCount++;
             }
@@ -136,14 +136,14 @@ public class WebSocketPointageService {
                 List<Fact_pointage> savedPointages = factPointageService.savePointageBatch(pointagesToSave);
                 processedCount.addAndGet(savedPointages.size());
 
-                log.info("✅ Batch terminé: {} sauvegardés ({} succès, {} rejets)",
+                log.info(" Batch terminé: {} sauvegardés ({} succès, {} rejets)",
                         savedPointages.size(), successCount, rejectedCount);
 
                 // Notification
                 sendBatchNotification(savedPointages.size(), batch.size(), successCount, rejectedCount);
 
             } catch (Exception e) {
-                log.error("❌ Erreur sauvegarde batch: {}", e.getMessage(), e);
+                log.error(" Erreur sauvegarde batch: {}", e.getMessage(), e);
             }
         }
     }
@@ -167,10 +167,10 @@ public class WebSocketPointageService {
                 }
             }
 
-            log.debug("📋 {} pastille(s) chargée(s) pour le batch", pastilles.size());
+            log.debug(" {} pastille(s) chargée(s) pour le batch", pastilles.size());
 
         } catch (Exception e) {
-            log.error("❌ Erreur chargement pastilles: {}", e.getMessage());
+            log.error(" Erreur chargement pastilles: {}", e.getMessage());
         }
 
         return pastilleMap;

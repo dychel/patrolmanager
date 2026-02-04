@@ -1,4 +1,5 @@
 package com.patrolmanagr.patrolmanagr.security;
+
 import com.patrolmanagr.patrolmanagr.security.jwt.JwtAuthTokenFilter;
 import com.patrolmanagr.patrolmanagr.security.jwt.JwtAuthEntryPoint;
 import com.patrolmanagr.patrolmanagr.security.service.UserDetailsServiceImpl;
@@ -170,6 +171,19 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/exec-ronde-pastille/updatepointage/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/exec-ronde-pastille/initialize/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/exec-ronde-pastille/count/**").permitAll()
+
+                // ============ ROUTES SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME ============
+                // Routes SysJob publiques (programmation des jobs de rondes)
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/create").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/update/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/delete/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/code/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/active").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/schedule-type/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/scope/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-jobs/{id}/status").permitAll()
 
                 // Routes pour les fichiers statiques
                 .requestMatchers("/images/**").permitAll()

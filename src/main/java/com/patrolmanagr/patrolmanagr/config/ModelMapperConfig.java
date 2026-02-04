@@ -1,5 +1,4 @@
 package com.patrolmanagr.patrolmanagr.config;
-
 import com.patrolmanagr.patrolmanagr.dto.FactPointageDTO;
 import com.patrolmanagr.patrolmanagr.entity.Fact_pointage;
 import org.modelmapper.AbstractConverter;
@@ -7,7 +6,6 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 

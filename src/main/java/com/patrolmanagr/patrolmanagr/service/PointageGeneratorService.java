@@ -20,7 +20,7 @@ public class PointageGeneratorService {
 
     private final Random random = new Random();
     private final List<String> TEST_UIDS = Arrays.asList(
-            "56E7C660", "56E7C662"
+            "56E7C660", "EXT-ABC-124", "EXT-ABC-325", "EXT-ABC-134", "EXT-ABC-440"
     );
 
     /**
