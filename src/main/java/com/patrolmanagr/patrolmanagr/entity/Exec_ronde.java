@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,13 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "exec_ronde",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"prog_ronde_id", "planned_start_at"}),
-        indexes = {
-                @Index(name = "IDX_exec_site_date", columnList = "site_id, exec_date, status"),
-                @Index(name = "IDX_exec_date", columnList = "exec_date, status"),
-                @Index(name = "IDX_exec_prog", columnList = "prog_ronde_id, planned_start_at")
-        })
+@Table(name = "exec_ronde")
 public class Exec_ronde {
 
     @Id
@@ -34,10 +27,6 @@ public class Exec_ronde {
 
     @Column(name = "planned_end_at", nullable = false)
     private LocalDateTime plannedEndAt;
-
-    @ManyToOne
-    @JoinColumn(name = "prog_ronde_id", nullable = false)
-    private Prog_ronde progRonde;
 
     @ManyToOne
     @JoinColumn(name = "ref_ronde_id", nullable = false)
@@ -63,7 +52,25 @@ public class Exec_ronde {
     @Column(name = "last_event_at")
     private LocalDateTime lastEventAt;
 
-    private String audit_field;
+    // Champs pour la gestion des incidents
+    @Column(name = "incident_count")
+    private Integer incidentCount = 0;
+
+    @Column(name = "retard_minutes")
+    private Integer retardMinutes = 0;
+
+    @Column(name = "pastilles_manquantes")
+    private Integer pastillesManquantes = 0;
+
+    @Column(name = "sequence_errors")
+    private Integer sequenceErrors = 0;
+
+    // Lien avec le job qui a créé cette exécution
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_run_id")
+    private SysJobRun jobRun;
+
+    private String auditField;
 
     @Column(name = "created_at")
     private LocalDateTime created_at;
@@ -76,4 +83,9 @@ public class Exec_ronde {
 
     @Column(name = "updated_by")
     private Long updated_by;
+
+    // Méthode utilitaire
+    public void addIncident() {
+        this.incidentCount = (this.incidentCount == null) ? 1 : this.incidentCount + 1;
+    }
 }

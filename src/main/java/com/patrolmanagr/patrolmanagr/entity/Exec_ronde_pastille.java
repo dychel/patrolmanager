@@ -1,20 +1,18 @@
 package com.patrolmanagr.patrolmanagr.entity;
+
 import com.patrolmanagr.patrolmanagr.config.Status_ronde_pastille;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "exec_ronde_pastille",
-        indexes = {
-                @Index(name = "IDX_erp_exec_seq", columnList = "exec_ronde_id, seq_no"),
-                @Index(name = "IDX_erp_pastille", columnList = "pastille_id")
-        })
+@Table(name = "exec_ronde_pastille")
 public class Exec_ronde_pastille {
 
     @Id
@@ -29,7 +27,7 @@ public class Exec_ronde_pastille {
     @JoinColumn(name = "pastille_id", nullable = false)
     private Ref_pastille pastille;
 
-    @Column(name = "seq_no")
+    @Column(name = "seq_no", nullable = false)
     private Integer seqNo;
 
     @Column(name = "expected_travel_sec")
@@ -57,9 +55,22 @@ public class Exec_ronde_pastille {
     @Column(name = "deviation_sec")
     private Integer deviationSec;
 
+    @Column(name = "notes")
     private String notes;
 
-    private String audit_field;
+    @Column(name = "incident_type")
+    private String incidentType;
+
+    @Column(name = "incident_details")
+    private String incidentDetails;
+
+    @Column(name = "is_late")
+    private Boolean isLate = false;
+
+    @Column(name = "late_minutes")
+    private Integer lateMinutes = 0;
+
+    private String auditField;
 
     @Column(name = "created_at")
     private LocalDateTime created_at;

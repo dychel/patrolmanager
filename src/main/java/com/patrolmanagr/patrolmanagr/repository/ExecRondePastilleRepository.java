@@ -41,7 +41,7 @@ public interface ExecRondePastilleRepository extends JpaRepository<Exec_ronde_pa
     List<Exec_ronde_pastille> findByPointageId(@Param("pointageId") Long pointageId);
 
     @Query("SELECT e FROM Exec_ronde_pastille e WHERE e.execRonde.id = :execRondeId AND e.pastille.id = :pastilleId")
-    Exec_ronde_pastille findByExecRondeIdAndPastilleId(@Param("execRondeId") Long execRondeId, @Param("pastilleId") Long pastilleId);
+    List<Exec_ronde_pastille> findByExecRondeIdAndPastilleId(@Param("execRondeId") Long execRondeId, @Param("pastilleId") Long pastilleId);
 
     @Query("SELECT COUNT(e) > 0 FROM Exec_ronde_pastille e WHERE e.execRonde.id = :execRondeId AND e.seqNo = :seqNo")
     boolean existsByExecRondeIdAndSeqNo(@Param("execRondeId") Long execRondeId, @Param("seqNo") Integer seqNo);

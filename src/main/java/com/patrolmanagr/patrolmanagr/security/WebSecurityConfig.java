@@ -185,6 +185,49 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/sys-jobs/scope/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/sys-jobs/{id}/status").permitAll()
 
+                // ============ ROUTES SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME SYSTÈME ============
+                // Routes SysJobRun publiques (exécution des jobs)
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/create").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/start/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/update/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/complete/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/job/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/status/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/date-range").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/running").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/clean-old/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/sys-job-runs/latest/job/**").permitAll()
+
+                // ============ ROUTES D'EXÉCUTION DES RONDES ============
+                // Routes d'exécution des rondes
+                .requestMatchers("/api/v1/patrolmanagr/execution/execute-job/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/execution/execute-job-manual/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/execution/stats").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/execution/test-pointage/**").permitAll()
+
+                // ============ ROUTES POUR LES RONDES EXÉCUTÉES ============
+                // Routes pour consulter les rondes déjà exécutées
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/today").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/in-progress").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/completed").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/by-date/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/by-site/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/by-site-period/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/by-status/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/by-ronde/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/details/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/history/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/by-job-run/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/search").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/site-stats/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/executed-rondes/dashboard-summary").permitAll()
+
+                // ============ ROUTES INCIDENTS ============
+                // Routes pour les incidents (si vous avez un IncidentController)
+                .requestMatchers("/api/v1/patrolmanagr/incidents/**").permitAll()
+
                 // Routes pour les fichiers statiques
                 .requestMatchers("/images/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()

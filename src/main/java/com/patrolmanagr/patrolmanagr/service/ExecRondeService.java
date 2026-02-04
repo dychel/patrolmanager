@@ -19,8 +19,6 @@ public interface ExecRondeService {
 
     List<Exec_ronde> listExecRonde();
 
-    List<Exec_ronde> findExecRondeByProgRondeId(Long progRondeId);
-
     List<Exec_ronde> findExecRondeByRefRondeId(Long refRondeId);
 
     List<Exec_ronde> findExecRondeBySiteId(Long siteId);
@@ -46,4 +44,23 @@ public interface ExecRondeService {
     Exec_ronde endExecRonde(Long id, BigDecimal completionRate);
 
     Exec_ronde updateLastEvent(Long id);
+
+    // Nouvelles méthodes
+    List<Exec_ronde> findExecRondeByJobRunId(Long jobRunId);
+
+    List<Exec_ronde> findTodayExecRondesBySiteId(Long siteId);
+
+    Long countExecRondesBySiteIdAndStatus(Long siteId, Status_exec_Ronde status);
+
+    BigDecimal calculateAverageCompletionRate(Long siteId, LocalDate startDate, LocalDate endDate);
+
+    List<Exec_ronde> findExecRondesWithIncidents();
+
+    Exec_ronde createExecRondeFromRonde(Long rondeId, Long jobRunId);
+
+    void updateIncidentCount(Long execRondeId, int incidentCount);
+
+    void updateRetardMinutes(Long execRondeId, int retardMinutes);
+
+    List<Exec_ronde> findRecentExecRondes(int limit);
 }
