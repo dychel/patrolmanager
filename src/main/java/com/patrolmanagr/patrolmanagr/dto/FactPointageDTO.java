@@ -24,7 +24,7 @@ public class FactPointageDTO {
     private String terminalCodeRaw;
     private Long agentUserId;
     private String agentCodeRaw;
-
+    private String rondeName;
     // Champs d'enrichissement optionnels
     private String siteName;
     private Long zoneId;

@@ -65,6 +65,7 @@ public class FactPointageServiceImpl implements FactPointageService {
 
         // Mapper manuellement les champs
         factPointage.setEventTime(factPointageDTO.getEventTime());
+        factPointage.setRondeName(factPointageDTO.getRondeName());
         factPointage.setRondeId(factPointageDTO.getRondeId());
         factPointage.setEventDate(factPointageDTO.getEventTime() != null ?
                 factPointageDTO.getEventTime().toLocalDate() : null);
@@ -180,7 +181,9 @@ public class FactPointageServiceImpl implements FactPointageService {
                     if (pointage.getRondeId() == null) {
                         Long rondeId = findActiveRondeForSite(pastille.getRef_site_id().getId());
                         if (rondeId != null) {
+                            Ref_ronde ref_ronde = refRondeService.findRondeById(rondeId);
                             pointage.setRondeId(rondeId);
+                            pointage.setRondeName(ref_ronde.getCode());
                         }
                     }
                 }
@@ -397,6 +400,7 @@ public class FactPointageServiceImpl implements FactPointageService {
                     Long rondeId = findActiveRondeForSite(factPointage.getSiteId());
                     if (rondeId != null) {
                         Ref_ronde ref_ronde = refRondeService.findRondeById(rondeId);
+                        factPointage.setRondeName(ref_ronde.getCode());
                         factPointage.setRondeName(ref_ronde.getCode());
                     }
                 }

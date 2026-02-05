@@ -160,11 +160,12 @@ public class RondeExecutionService {
             List<Long> rondeIds = parseRondeIds(job.getRondeIds());
             for (Long rondeId : rondeIds) {
                 try {
-                    Ref_ronde ronde = refRondeRepository.findById(rondeId)
-                            .orElseThrow(() -> new ApiRequestException("Ronde non trouvée: " + rondeId));
-                    if (ronde.getStatus() == Status.ACTIVE) {
+                    Ref_ronde ronde = refRondeRepository.findByIdRonde(rondeId);
+                    //.orElseThrow(() -> new ApiRequestException("Ronde non trouvée: " + rondeId));
+                    //if (ronde.getStatus() == Status.ACTIVE) {
+                    //if (ronde.getCode() != null) {
                         rondes.add(ronde);
-                    }
+                    //}
                 } catch (Exception e) {
                     // Log et continue
                     System.err.println("Ronde " + rondeId + " non trouvée ou inactive");

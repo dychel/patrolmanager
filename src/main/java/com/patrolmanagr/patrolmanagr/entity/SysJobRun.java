@@ -1,6 +1,7 @@
 package com.patrolmanagr.patrolmanagr.entity;
 
 import com.patrolmanagr.patrolmanagr.config.JobRunStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "sys_job_run")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SysJobRun {
 
     @Id
@@ -21,6 +23,7 @@ public class SysJobRun {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private SysJob job;
 
     @Column(name = "started_at", nullable = false)

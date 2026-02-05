@@ -73,7 +73,7 @@ public class WebSocketPointageService {
     /**
      * Traitement batch toutes les 1 minute
      */
-    @Scheduled(fixedRate = 600000) // 60,000 ms = 1 h
+    @Scheduled(fixedRate = 60000) // 60,000 ms = 1 min
     @Transactional
     public void processBatchEveryMinute() {
         if (pointageQueue.isEmpty()) {

@@ -2,6 +2,7 @@ package com.patrolmanagr.patrolmanagr.entity;
 
 import com.patrolmanagr.patrolmanagr.config.ScheduleTypeJob;
 import com.patrolmanagr.patrolmanagr.config.JobScope;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +15,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "sys_job")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SysJob {
 
     @Id
@@ -54,4 +56,6 @@ public class SysJob {
 
     @Column(name = "audit_field")
     private String auditField;
+
+    private String executionDate;
 }

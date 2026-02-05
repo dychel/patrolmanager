@@ -26,4 +26,5 @@ public class SysJobDTO {
     private List<Long> rondeIds;
     private Boolean isEnabled = true;
     private String auditField;
+    private String executionDate;
 }
