@@ -1,6 +1,6 @@
 package com.patrolmanagr.patrolmanagr.repository;
 
-import com.patrolmanagr.patrolmanagr.entity.Incident;
+import com.patrolmanagr.patrolmanagr.entity.Evenement;
 import com.patrolmanagr.patrolmanagr.config.IncidentStatus;
 import com.patrolmanagr.patrolmanagr.config.IncidentType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,41 +12,41 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface IncidentRepository extends JpaRepository<Incident, Long> {
+public interface IncidentRepository extends JpaRepository<Evenement, Long> {
 
-    List<Incident> findByExecRondeId(Long execRondeId);
+    List<Evenement> findByExecRondeId(Long execRondeId);
 
-    List<Incident> findBySiteId(Long siteId);
+    List<Evenement> findBySiteId(Long siteId);
 
-    List<Incident> findByRondeId(Long rondeId);
+    List<Evenement> findByRondeId(Long rondeId);
 
-    List<Incident> findByPastilleId(Long pastilleId);
+    List<Evenement> findByPastilleId(Long pastilleId);
 
-    List<Incident> findByType(IncidentType type);
+    List<Evenement> findByType(IncidentType type);
 
-    List<Incident> findByStatus(IncidentStatus status);
+    List<Evenement> findByStatus(IncidentStatus status);
 
-    List<Incident> findByAgentUserId(Long agentUserId);
+    List<Evenement> findByAgentUserId(Long agentUserId);
 
-    @Query("SELECT i FROM Incident i WHERE i.detectedAt BETWEEN :startDate AND :endDate")
-    List<Incident> findByDetectedAtBetween(@Param("startDate") LocalDateTime startDate,
-                                           @Param("endDate") LocalDateTime endDate);
-
-    @Query("SELECT i FROM Incident i WHERE i.siteId = :siteId AND i.detectedAt BETWEEN :startDate AND :endDate")
-    List<Incident> findBySiteIdAndDateRange(@Param("siteId") Long siteId,
-                                            @Param("startDate") LocalDateTime startDate,
+    @Query("SELECT i FROM Evenement i WHERE i.detectedAt BETWEEN :startDate AND :endDate")
+    List<Evenement> findByDetectedAtBetween(@Param("startDate") LocalDateTime startDate,
                                             @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT i FROM Incident i WHERE i.execRonde.id = :execRondeId AND i.type = :type")
-    List<Incident> findByExecRondeIdAndType(@Param("execRondeId") Long execRondeId,
-                                            @Param("type") IncidentType type);
+    @Query("SELECT i FROM Evenement i WHERE i.siteId = :siteId AND i.detectedAt BETWEEN :startDate AND :endDate")
+    List<Evenement> findBySiteIdAndDateRange(@Param("siteId") Long siteId,
+                                             @Param("startDate") LocalDateTime startDate,
+                                             @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT COUNT(i) FROM Incident i WHERE i.execRonde.id = :execRondeId")
+    @Query("SELECT i FROM Evenement i WHERE i.execRonde.id = :execRondeId AND i.type = :type")
+    List<Evenement> findByExecRondeIdAndType(@Param("execRondeId") Long execRondeId,
+                                             @Param("type") IncidentType type);
+
+    @Query("SELECT COUNT(i) FROM Evenement i WHERE i.execRonde.id = :execRondeId")
     Long countByExecRondeId(@Param("execRondeId") Long execRondeId);
 
-    @Query("SELECT i FROM Incident i WHERE i.execRondePastille.id = :execRondePastilleId")
-    List<Incident> findByExecRondePastilleId(@Param("execRondePastilleId") Long execRondePastilleId);
+    @Query("SELECT i FROM Evenement i WHERE i.execRondePastille.id = :execRondePastilleId")
+    List<Evenement> findByExecRondePastilleId(@Param("execRondePastilleId") Long execRondePastilleId);
 
-    @Query("SELECT i FROM Incident i WHERE i.pointageId = :pointageId")
-    List<Incident> findByPointageId(@Param("pointageId") Long pointageId);
+    @Query("SELECT i FROM Evenement i WHERE i.pointageId = :pointageId")
+    List<Evenement> findByPointageId(@Param("pointageId") Long pointageId);
 }

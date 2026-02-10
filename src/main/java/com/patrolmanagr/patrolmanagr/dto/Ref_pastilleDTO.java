@@ -1,8 +1,6 @@
 package com.patrolmanagr.patrolmanagr.dto;
+
 import com.patrolmanagr.patrolmanagr.config.Status;
-import com.patrolmanagr.patrolmanagr.entity.Ref_secteur;
-import com.patrolmanagr.patrolmanagr.entity.Ref_site;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

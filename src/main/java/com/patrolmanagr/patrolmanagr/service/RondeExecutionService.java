@@ -1,7 +1,6 @@
 package com.patrolmanagr.patrolmanagr.service;
 
 import com.patrolmanagr.patrolmanagr.config.*;
-import com.patrolmanagr.patrolmanagr.dto.*;
 import com.patrolmanagr.patrolmanagr.entity.*;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
 import com.patrolmanagr.patrolmanagr.repository.*;
@@ -430,8 +429,8 @@ public class RondeExecutionService {
         updateCompletionRate(execRonde, execPastilles);
 
         // 4. Compter les incidents existants
-        List<Incident> existingIncidents = incidentRepository.findByExecRondeId(execRonde.getId());
-        incidentCount += existingIncidents.size();
+        List<Evenement> existingEvenements = incidentRepository.findByExecRondeId(execRonde.getId());
+        incidentCount += existingEvenements.size();
 
         // Mettre à jour le compteur d'incidents
         execRonde.setIncidentCount(incidentCount);
@@ -444,69 +443,69 @@ public class RondeExecutionService {
      * Créer un incident de pastille manquante
      */
     private void createMissingPastilleIncident(Exec_ronde_pastille execPastille) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.PASTILLE_MANQUANTE);
-        incident.setSeverity(IncidentSeverity.MEDIUM);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Pastille manquante: " + execPastille.getPastille().getCode());
-        incident.setDescription("La pastille n'a pas été scannée pendant la ronde");
-        incident.setExecRonde(execPastille.getExecRonde());
-        incident.setExecRondePastille(execPastille);
-        incident.setSiteId(execPastille.getExecRonde().getSite().getId());
-        incident.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
-        incident.setPastilleId(execPastille.getPastille().getId());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.PASTILLE_MANQUANTE);
+        evenement.setSeverity(IncidentSeverity.MEDIUM);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Pastille manquante: " + execPastille.getPastille().getCode());
+        evenement.setDescription("La pastille n'a pas été scannée pendant la ronde");
+        evenement.setExecRonde(execPastille.getExecRonde());
+        evenement.setExecRondePastille(execPastille);
+        evenement.setSiteId(execPastille.getExecRonde().getSite().getId());
+        evenement.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
+        evenement.setPastilleId(execPastille.getPastille().getId());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
      * Détecter un double scan
      */
     private void detectDoubleScanIncident(Exec_ronde_pastille execPastille, Fact_pointage pointage) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.DOUBLE_SCAN);
-        incident.setSeverity(IncidentSeverity.LOW);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Double scan détecté");
-        incident.setDescription("La pastille " + execPastille.getPastille().getCode() + " a été scannée plusieurs fois");
-        incident.setExecRonde(execPastille.getExecRonde());
-        incident.setExecRondePastille(execPastille);
-        incident.setSiteId(execPastille.getExecRonde().getSite().getId());
-        incident.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
-        incident.setPastilleId(execPastille.getPastille().getId());
-        incident.setPointageId(pointage.getId());
-        incident.setAgentUserId(pointage.getAgentUserId());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.DOUBLE_SCAN);
+        evenement.setSeverity(IncidentSeverity.LOW);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Double scan détecté");
+        evenement.setDescription("La pastille " + execPastille.getPastille().getCode() + " a été scannée plusieurs fois");
+        evenement.setExecRonde(execPastille.getExecRonde());
+        evenement.setExecRondePastille(execPastille);
+        evenement.setSiteId(execPastille.getExecRonde().getSite().getId());
+        evenement.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
+        evenement.setPastilleId(execPastille.getPastille().getId());
+        evenement.setPointageId(pointage.getId());
+        evenement.setAgentUserId(pointage.getAgentUserId());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
      * Détecter une pastille non attendue
      */
     private void detectUnexpectedPastilleIncident(Fact_pointage pointage, Exec_ronde execRonde) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.HORS_PLAQUETTE);
-        incident.setSeverity(IncidentSeverity.MEDIUM);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Pastille non attendue");
-        incident.setDescription("Pastille scannée hors de la ronde prévue");
-        incident.setExecRonde(execRonde);
-        incident.setSiteId(execRonde.getSite().getId());
-        incident.setRondeId(execRonde.getRefRonde().getId());
-        incident.setPastilleId(pointage.getPastilleId());
-        incident.setPointageId(pointage.getId());
-        incident.setAgentUserId(pointage.getAgentUserId());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.HORS_PLAQUETTE);
+        evenement.setSeverity(IncidentSeverity.MEDIUM);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Pastille non attendue");
+        evenement.setDescription("Pastille scannée hors de la ronde prévue");
+        evenement.setExecRonde(execRonde);
+        evenement.setSiteId(execRonde.getSite().getId());
+        evenement.setRondeId(execRonde.getRefRonde().getId());
+        evenement.setPastilleId(pointage.getPastilleId());
+        evenement.setPointageId(pointage.getId());
+        evenement.setAgentUserId(pointage.getAgentUserId());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
@@ -539,23 +538,23 @@ public class RondeExecutionService {
      * Créer un incident d'erreur de séquence
      */
     private void createSequenceErrorIncident(Exec_ronde_pastille currentPastille, Exec_ronde_pastille missingPastille) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.SEQUENCE_INCORRECTE);
-        incident.setSeverity(IncidentSeverity.MEDIUM);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Erreur de séquence");
-        incident.setDescription("La pastille " + currentPastille.getPastille().getCode() +
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.SEQUENCE_INCORRECTE);
+        evenement.setSeverity(IncidentSeverity.MEDIUM);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Erreur de séquence");
+        evenement.setDescription("La pastille " + currentPastille.getPastille().getCode() +
                 " a été scannée avant la pastille " + missingPastille.getPastille().getCode());
-        incident.setExecRonde(currentPastille.getExecRonde());
-        incident.setExecRondePastille(currentPastille);
-        incident.setSiteId(currentPastille.getExecRonde().getSite().getId());
-        incident.setRondeId(currentPastille.getExecRonde().getRefRonde().getId());
-        incident.setPastilleId(currentPastille.getPastille().getId());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        evenement.setExecRonde(currentPastille.getExecRonde());
+        evenement.setExecRondePastille(currentPastille);
+        evenement.setSiteId(currentPastille.getExecRonde().getSite().getId());
+        evenement.setRondeId(currentPastille.getExecRonde().getRefRonde().getId());
+        evenement.setPastilleId(currentPastille.getPastille().getId());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
@@ -573,26 +572,26 @@ public class RondeExecutionService {
      * Créer un incident de retard
      */
     private void createDelayIncident(Exec_ronde_pastille execPastille) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.RETARD);
-        incident.setSeverity(IncidentSeverity.LOW);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Retard détecté");
-        incident.setDescription("Retard de " + execPastille.getLateMinutes() + " minutes pour la pastille " +
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.RETARD);
+        evenement.setSeverity(IncidentSeverity.LOW);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Retard détecté");
+        evenement.setDescription("Retard de " + execPastille.getLateMinutes() + " minutes pour la pastille " +
                 execPastille.getPastille().getCode());
-        incident.setExecRonde(execPastille.getExecRonde());
-        incident.setExecRondePastille(execPastille);
-        incident.setSiteId(execPastille.getExecRonde().getSite().getId());
-        incident.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
-        incident.setPastilleId(execPastille.getPastille().getId());
-        incident.setDelayMinutes(execPastille.getLateMinutes());
-        incident.setExpectedTime(execPastille.getExpectedTime());
-        incident.setActualTime(execPastille.getActualTime());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        evenement.setExecRonde(execPastille.getExecRonde());
+        evenement.setExecRondePastille(execPastille);
+        evenement.setSiteId(execPastille.getExecRonde().getSite().getId());
+        evenement.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
+        evenement.setPastilleId(execPastille.getPastille().getId());
+        evenement.setDelayMinutes(execPastille.getLateMinutes());
+        evenement.setExpectedTime(execPastille.getExpectedTime());
+        evenement.setActualTime(execPastille.getActualTime());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
@@ -631,25 +630,25 @@ public class RondeExecutionService {
      * Créer un incident de temps de trajet trop long
      */
     private void createTravelTimeIncident(Exec_ronde_pastille execPastille, Exec_ronde_pastille previousPastille, Duration actualTravel) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.TEMPS_TRAJET_TROP_LONG);
-        incident.setSeverity(IncidentSeverity.MEDIUM);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Temps de trajet trop long");
-        incident.setDescription("Temps de trajet entre " + previousPastille.getPastille().getCode() +
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.TEMPS_TRAJET_TROP_LONG);
+        evenement.setSeverity(IncidentSeverity.MEDIUM);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Temps de trajet trop long");
+        evenement.setDescription("Temps de trajet entre " + previousPastille.getPastille().getCode() +
                 " et " + execPastille.getPastille().getCode() + " est de " +
                 actualTravel.toMinutes() + " minutes (attendu: " +
                 (execPastille.getExpectedTravelSec() / 60) + " minutes)");
-        incident.setExecRonde(execPastille.getExecRonde());
-        incident.setExecRondePastille(execPastille);
-        incident.setSiteId(execPastille.getExecRonde().getSite().getId());
-        incident.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
-        incident.setPastilleId(execPastille.getPastille().getId());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        evenement.setExecRonde(execPastille.getExecRonde());
+        evenement.setExecRondePastille(execPastille);
+        evenement.setSiteId(execPastille.getExecRonde().getSite().getId());
+        evenement.setRondeId(execPastille.getExecRonde().getRefRonde().getId());
+        evenement.setPastilleId(execPastille.getPastille().getId());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
@@ -671,20 +670,20 @@ public class RondeExecutionService {
      * Créer un incident de retard global
      */
     private void createGlobalDelayIncident(Exec_ronde execRonde, int lateCount, int totalCount) {
-        Incident incident = new Incident();
-        incident.setType(IncidentType.RETARD);
-        incident.setSeverity(IncidentSeverity.HIGH);
-        incident.setStatus(IncidentStatus.OPEN);
-        incident.setTitle("Retard global de la ronde");
-        incident.setDescription(lateCount + " pastilles sur " + totalCount + " sont en retard");
-        incident.setExecRonde(execRonde);
-        incident.setSiteId(execRonde.getSite().getId());
-        incident.setRondeId(execRonde.getRefRonde().getId());
-        incident.setDetectedAt(LocalDateTime.now());
-        incident.setCreatedAt(LocalDateTime.now());
-        incident.setCreatedBy(userService.getConnectedUserId());
+        Evenement evenement = new Evenement();
+        evenement.setType(IncidentType.RETARD);
+        evenement.setSeverity(IncidentSeverity.HIGH);
+        evenement.setStatus(IncidentStatus.OPEN);
+        evenement.setTitle("Retard global de la ronde");
+        evenement.setDescription(lateCount + " pastilles sur " + totalCount + " sont en retard");
+        evenement.setExecRonde(execRonde);
+        evenement.setSiteId(execRonde.getSite().getId());
+        evenement.setRondeId(execRonde.getRefRonde().getId());
+        evenement.setDetectedAt(LocalDateTime.now());
+        evenement.setCreatedAt(LocalDateTime.now());
+        evenement.setCreatedBy(userService.getConnectedUserId());
 
-        incidentRepository.save(incident);
+        incidentRepository.save(evenement);
     }
 
     /**
@@ -761,13 +760,13 @@ public class RondeExecutionService {
         stats.put("totalRondesExecuted", execRondes.size());
 
         // Statistiques des incidents
-        List<Incident> incidents = incidentRepository
+        List<Evenement> evenements = incidentRepository
                 .findByDetectedAtBetween(startDateTime, endDateTime);
-        stats.put("totalIncidents", incidents.size());
+        stats.put("totalIncidents", evenements.size());
 
         // Répartition par type d'incident
-        Map<IncidentType, Long> incidentByType = incidents.stream()
-                .collect(Collectors.groupingBy(Incident::getType, Collectors.counting()));
+        Map<IncidentType, Long> incidentByType = evenements.stream()
+                .collect(Collectors.groupingBy(Evenement::getType, Collectors.counting()));
         stats.put("incidentsByType", incidentByType);
 
         return stats;

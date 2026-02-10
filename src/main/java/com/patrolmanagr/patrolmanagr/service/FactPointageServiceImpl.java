@@ -1,18 +1,13 @@
 package com.patrolmanagr.patrolmanagr.service;
-
 import com.patrolmanagr.patrolmanagr.config.Status;
 import com.patrolmanagr.patrolmanagr.dto.FactPointageDTO;
-import com.patrolmanagr.patrolmanagr.entity.Fact_pointage;
-import com.patrolmanagr.patrolmanagr.entity.Ref_pastille;
-import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
+import com.patrolmanagr.patrolmanagr.entity.*;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
 import com.patrolmanagr.patrolmanagr.repository.FactPointageRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,6 +32,9 @@ public class FactPointageServiceImpl implements FactPointageService {
 
     @Autowired
     private RefRondeService refRondeService;
+
+    @Autowired
+    private RefTerminalService refTerminalService;
 
 //    public Fact_pointage savePointage(FactPointageDTO factPointageDTO) {
 //        Fact_pointage factPointage = modelMapper.map(factPointageDTO, Fact_pointage.class);
@@ -160,6 +158,8 @@ public class FactPointageServiceImpl implements FactPointageService {
                 pointage.setPastilleId(pastille.getId());
                 pointage.setPastilleLabel(pastille.getLabel());
 
+                //trouver le site, terminal et ronde
+                Ref_pastille ref_pastille = refPastilleService.findPastilleById(pastille.getId());
                 // Secteur
                 if (pastille.getRef_secteur_id() != null) {
                     pointage.setSecteurId(pastille.getRef_secteur_id().getId());
@@ -202,6 +202,14 @@ public class FactPointageServiceImpl implements FactPointageService {
             try {
                 var site = refSiteService.findSiteById(pointage.getSiteId());
                 pointage.setSiteName(site.getName());
+                //Added some data
+                Ref_ronde ref_ronde = refRondeService.findActiveRondeBySiteId(pointage.getSiteId());
+                pointage.setRondeName(ref_ronde.getCode());
+//                Ref_terminal ref_terminal = refTerminalService.findTerminalByIdSite(pointage.getSiteId());
+//                pointage.setTerminalId(ref_terminal.getId());
+//                pointage.setTerminalCodeRaw(ref_terminal.getCode());
+//                pointage.setTerminalType(ref_terminal.getTerminalType());
+                //
 
                 if (site.getRef_zone() != null) {
                     pointage.setZoneId(site.getRef_zone().getId());
