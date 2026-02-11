@@ -1,8 +1,7 @@
 package com.patrolmanagr.patrolmanagr.config;
 
-public enum IncidentSeverity {
+public enum EvenementSeverity {
     FAIBLE,
     MOYENNE,
-    ELEVEE,
-    CRITIQUE
+    ELEVEE
 }

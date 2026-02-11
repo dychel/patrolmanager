@@ -1,8 +1,8 @@
 package com.patrolmanagr.patrolmanagr.entity;
 
-import com.patrolmanagr.patrolmanagr.config.EvenementSeverity;
-import com.patrolmanagr.patrolmanagr.config.EvenementType;
-import com.patrolmanagr.patrolmanagr.config.EvenementStatus;
+import com.patrolmanagr.patrolmanagr.config.IncidentSeverity;
+import com.patrolmanagr.patrolmanagr.config.IncidentType;
+import com.patrolmanagr.patrolmanagr.config.IncidentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "evenement")
-public class Evenement {
+@Table(name = "incident")
+public class Incident {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,15 +23,15 @@ public class Evenement {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private EvenementType type;
+    private IncidentType type;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false)
-    private EvenementSeverity severity = EvenementSeverity.FAIBLE;
+    private IncidentSeverity severity = IncidentSeverity.MOYENNE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private EvenementStatus status = EvenementStatus.NOUVEAU;
+    private IncidentStatus status = IncidentStatus.OUVERT;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -40,21 +40,17 @@ public class Evenement {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exec_ronde_id")
+    @JoinColumn(name = "exec_ronde_id", nullable = false)
     private Exec_ronde execRonde;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exec_ronde_pastille_id")
     private Exec_ronde_pastille execRondePastille;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_run_id")
-    private SysJobRun jobRun;
-
-    @Column(name = "site_id")
+    @Column(name = "site_id", nullable = false)
     private Long siteId;
 
-    @Column(name = "ronde_id")
+    @Column(name = "ronde_id", nullable = false)
     private Long rondeId;
 
     @Column(name = "pastille_id")
@@ -75,7 +71,13 @@ public class Evenement {
     @Column(name = "resolution_notes", length = 1000)
     private String resolutionNotes;
 
-    // Métriques
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "resolved_by")
+    private Long resolvedBy;
+
+    // Métriques de retard
     @Column(name = "delay_minutes")
     private Integer delayMinutes = 0;
 
@@ -85,32 +87,12 @@ public class Evenement {
     @Column(name = "actual_time")
     private LocalDateTime actualTime;
 
-    @Column(name = "deviation_sec")
-    private Integer deviationSec;
-
-    @Column(name = "expected_travel_sec")
-    private Integer expectedTravelSec;
-
-    @Column(name = "actual_travel_sec")
-    private Integer actualTravelSec;
-
     @Column(name = "audit_field")
     private String auditField;
-
-    @Column(name = "created_by")
-    private Long createdBy;
-
-    @Column(name = "resolved_by")
-    private Long resolvedBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }

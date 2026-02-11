@@ -224,9 +224,70 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/executed-rondes/site-stats/**").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/executed-rondes/dashboard-summary").permitAll()
 
-                // ============ ROUTES INCIDENTS ============
-                // Routes pour les incidents (si vous avez un IncidentController)
-                .requestMatchers("/api/v1/patrolmanagr/incidents/**").permitAll()
+                // ============ ROUTES INCIDENTS - COMPLÈTES ============
+                // Routes CRUD de base pour les incidents
+                .requestMatchers("/api/v1/patrolmanagr/incidents/create").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/delete/{id}").permitAll()
+
+                // Routes de filtrage par entités
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-exec-ronde/{execRondeId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-site/{siteId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-ronde/{rondeId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-pastille/{pastilleId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-exec-ronde-pastille/{execRondePastilleId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-pointage/{pointageId}").permitAll()
+
+                // Routes de filtrage par attributs
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-type/{type}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-status/{status}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/by-agent/{agentUserId}").permitAll()
+
+                // Routes de recherche et statistiques
+                .requestMatchers("/api/v1/patrolmanagr/incidents/prioritaires").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/search").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/stats").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/stats/site/{siteId}").permitAll()
+
+                // Routes par plage de dates
+                .requestMatchers("/api/v1/patrolmanagr/incidents/date-range").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/site-date-range/{siteId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/exec-ronde-type/{execRondeId}/{type}").permitAll()
+
+                // Routes d'actions sur les incidents
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/resoudre").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/fermer").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/en-cours").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/reouvrir").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/update-severite").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/update-type").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/{id}/assigner").permitAll()
+
+                // Routes de comptage
+                .requestMatchers("/api/v1/patrolmanagr/incidents/count/exec-ronde/{execRondeId}").permitAll()
+
+                // Routes de maintenance
+                .requestMatchers("/api/v1/patrolmanagr/incidents/delete-old/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/incidents/archive-resolved").permitAll()
+
+                // ============ ROUTES EVENEMENTS ============
+                // Routes pour les événements
+                .requestMatchers("/api/v1/patrolmanagr/evenements/create").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/by-exec-ronde/{execRondeId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/critical/active").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/{id}/resolve").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/delete/{id}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/evenements/stats/site/{siteId}").permitAll()
+
+                // ============ ROUTES JOB EXECUTION ============
+                // Routes pour l'exécution des jobs
+                .requestMatchers("/api/v1/patrolmanagr/job-execution/execute-manual/{jobId}").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/job-execution/force-execute/{jobId}").permitAll()
 
                 // Routes pour les fichiers statiques
                 .requestMatchers("/images/**").permitAll()

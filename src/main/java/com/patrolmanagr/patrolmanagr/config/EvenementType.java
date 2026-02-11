@@ -1,0 +1,32 @@
+package com.patrolmanagr.patrolmanagr.config;
+
+public enum EvenementType {
+    // Événements positifs
+    RONDE_DEBUTEE,
+    RONDE_TERMINEE,
+    PASTILLE_SCANNEE,
+    RONDE_COMPLETEE,
+    SEQUENCE_CORRECTE,
+    TEMPS_RESPECTE,
+
+    // Événements d'alerte
+    RETARD_MODERE,
+    RETARD_IMPORTANT,
+    SEQUENCE_INCORRECTE,
+    TEMPS_TRAJET_ELEVE,
+    PASTILLE_MANQUANTE,
+    OMISSION_PASTILLE,
+    RONDE_INCOMPLETE,
+    TERMINAL_INACTIF,
+    COLLECTE_ECHEC,
+    IMMOBILISATION,
+    DOUBLE_SCAN,
+    HORS_PLAQUETTE,
+    AUTRE,
+
+    // Événements système
+    JOB_EXECUTE,
+    RONDE_GENEREE,
+    POINTAGE_IMPORTE,
+    SYNCHRONISATION_TERMINEE
+}

@@ -5,7 +5,7 @@ import com.patrolmanagr.patrolmanagr.dto.ExecRondeDTO;
 import com.patrolmanagr.patrolmanagr.dto.RondeExecutionReportDTO;
 import com.patrolmanagr.patrolmanagr.entity.Exec_ronde;
 import com.patrolmanagr.patrolmanagr.entity.Exec_ronde_pastille;
-import com.patrolmanagr.patrolmanagr.entity.Evenement;
+import com.patrolmanagr.patrolmanagr.entity.Incident;
 import com.patrolmanagr.patrolmanagr.entity.Ref_ronde;
 import com.patrolmanagr.patrolmanagr.exception.ApiRequestException;
 import com.patrolmanagr.patrolmanagr.repository.ExecRondeRepository;
@@ -143,16 +143,16 @@ public class RondeExecutionQueryService {
                 .findByExecRondeId(execRondeId);
 
         // Récupérer les incidents
-        List<Evenement> evenements = incidentRepository.findByExecRondeId(execRondeId);
+        List<Incident> incidents = incidentRepository.findByExecRondeId(execRondeId);
 
         // Construire le rapport
         RondeExecutionReportDTO report = new RondeExecutionReportDTO();
         report.setExecRonde(convertToDTO(execRonde));
         report.setExecPastilles(execPastilles);
-        report.setEvenements(evenements);
+        report.setIncidents(incidents);
 
         // Calculer les statistiques
-        calculateStatistics(report, execPastilles, evenements);
+        calculateStatistics(report, execPastilles, incidents);
 
         return report;
     }
@@ -235,14 +235,14 @@ public class RondeExecutionQueryService {
         long totalPastillesManquantes = 0;
 
         for (Exec_ronde execRonde : execRondes) {
-            List<Evenement> evenements = incidentRepository.findByExecRondeId(execRonde.getId());
-            totalIncidents += evenements.size();
+            List<Incident> incidents = incidentRepository.findByExecRondeId(execRonde.getId());
+            totalIncidents += incidents.size();
 
-            totalRetards += evenements.stream()
+            totalRetards += incidents.stream()
                     .filter(i -> i.getType().toString().contains("RETARD"))
                     .count();
 
-            totalPastillesManquantes += evenements.stream()
+            totalPastillesManquantes += incidents.stream()
                     .filter(i -> i.getType().toString().contains("PASTILLE_MANQUANTE"))
                     .count();
         }
@@ -305,7 +305,7 @@ public class RondeExecutionQueryService {
      */
     private void calculateStatistics(RondeExecutionReportDTO report,
                                      List<Exec_ronde_pastille> execPastilles,
-                                     List<Evenement> evenements) {
+                                     List<Incident> incidents) {
 
         // Statistiques des pastilles
         long totalPastilles = execPastilles.size();
@@ -333,10 +333,10 @@ public class RondeExecutionQueryService {
         }
 
         // Statistiques des incidents
-        report.setTotalIncidents(evenements.size());
+        report.setTotalIncidents(incidents.size());
 
         // Grouper les incidents par type
-        Map<String, Long> incidentsByType = evenements.stream()
+        Map<String, Long> incidentsByType = incidents.stream()
                 .collect(Collectors.groupingBy(
                         i -> i.getType().toString(),
                         Collectors.counting()
@@ -344,14 +344,14 @@ public class RondeExecutionQueryService {
         report.setIncidentsByType(incidentsByType);
 
         // Calculer le temps total de retard
-        int totalDelayMinutes = evenements.stream()
+        int totalDelayMinutes = incidents.stream()
                 .filter(i -> i.getDelayMinutes() != null)
-                .mapToInt(Evenement::getDelayMinutes)
+                .mapToInt(Incident::getDelayMinutes)
                 .sum();
         report.setTotalDelayMinutes(totalDelayMinutes);
 
         // Temps moyen de retard
-        long delayIncidents = evenements.stream()
+        long delayIncidents = incidents.stream()
                 .filter(i -> i.getDelayMinutes() != null && i.getDelayMinutes() > 0)
                 .count();
 
@@ -372,7 +372,7 @@ public class RondeExecutionQueryService {
             majorIssues.add("Retard important: " + totalDelayMinutes + " minutes");
         }
 
-        long sequenceErrors = evenements.stream()
+        long sequenceErrors = incidents.stream()
                 .filter(i -> i.getType().toString().contains("SEQUENCE"))
                 .count();
 
