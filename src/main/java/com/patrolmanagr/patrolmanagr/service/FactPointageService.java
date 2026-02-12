@@ -4,6 +4,7 @@ import com.patrolmanagr.patrolmanagr.dto.FactPointageDTO;
 import com.patrolmanagr.patrolmanagr.entity.Fact_pointage;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FactPointageService {
@@ -28,4 +29,6 @@ public interface FactPointageService {
 
     // Recherche par external_uid (pastille_code_raw)
     List<Fact_pointage> findByExternalUid(String externalUid);
+
+    boolean existsByUniqueKey(LocalDateTime eventTime, String pastilleCodeRaw, String terminalCodeRaw);
 }

@@ -21,78 +21,70 @@ public class WebSocketPointageController {
     private final WebSocketPointageService webSocketPointageService;
 
     /**
-     * ENDPOINT WEB SOCKET - Reçoit les pointages
+     * ENDPOINT WEBSOCKET - Réception des pointages
+     * Utilisé par l'API fournisseur en temps réel
      */
     @MessageMapping("/pointages/receive")
     @SendTo("/topic/pointages/ack")
     public Map<String, Object> receivePointage(WebSocketPointageDTO pointageDTO) {
-        log.info("📡 WebSocket - Pointage reçu: {}", pointageDTO.getExternalUid());
+        log.info("📡 [WebSocket] Pointage reçu: externalUid={}", pointageDTO.getExternalUid());
 
         // Traiter le pointage
         webSocketPointageService.receivePointage(pointageDTO);
 
-        // Retourner acknowledgement
+        // Accusé de réception
         Map<String, Object> ack = new HashMap<>();
         ack.put("status", "OK");
+        ack.put("code", "POINTAGE_RECEIVED");
         ack.put("externalUid", pointageDTO.getExternalUid());
         ack.put("timestamp", LocalDateTime.now().toString());
-        ack.put("message", "Pointage reçu et en cours de traitement");
+        ack.put("queueSize", webSocketPointageService.getQueueSize());
+        ack.put("message", "Pointage reçu et en attente de traitement");
 
         return ack;
     }
 
     /**
-     * ENDPOINT REST pour test (simule un terminal)
+     * ENDPOINT REST - Pour tests manuels
+     * Simule l'envoi d'un pointage depuis l'API fournisseur
      */
-    @PostMapping("/api/v1/pointages/add")
-    public ResponseEntity<Map<String, Object>> simulatePointage(@RequestBody WebSocketPointageDTO pointageDTO) {
-        log.info("🎯 Simulation pointage REST: {}", pointageDTO.getExternalUid());
+    @PostMapping("/api/v1/fournisseur/pointages")
+    public ResponseEntity<Map<String, Object>> receiveFromFournisseur(@RequestBody WebSocketPointageDTO pointageDTO) {
+        log.info("📨 [REST] Pointage reçu depuis simulateur: {}", pointageDTO.getExternalUid());
 
         webSocketPointageService.receivePointage(pointageDTO);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("status", "received");
+        response.put("status", "success");
         response.put("externalUid", pointageDTO.getExternalUid());
         response.put("queueSize", webSocketPointageService.getQueueSize());
-        response.put("message", "Pointage simulé envoyé au système");
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("message", "Pointage envoyé au traitement");
 
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Monitoring WebSocket
+     * ENDPOINT STATISTIQUES - Monitoring
      */
-    @GetMapping("/api/v1/pointages/websocket-stats")
-    public ResponseEntity<Map<String, Object>> getWebSocketStats() {
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalReceived", webSocketPointageService.getTotalReceived());
-        stats.put("totalProcessed", webSocketPointageService.getTotalProcessed());
-        stats.put("queueSize", webSocketPointageService.getQueueSize());
-        stats.put("timestamp", LocalDateTime.now().toString());
-
+    @GetMapping("/api/v1/pointages/stats")
+    public ResponseEntity<Map<String, Object>> getStatistics() {
+        Map<String, Object> stats = webSocketPointageService.getStats();
+        stats.put("service", "API_FOURNISSEUR");
+        stats.put("endpoint", "/api/v1/fournisseur/pointages");
         return ResponseEntity.ok(stats);
     }
 
     /**
-     * Test simple
+     * ENDPOINT SANTÉ - Vérification du service
      */
-    @PostMapping("/api/v1/pointages/56E7C660")
-    public ResponseEntity<Map<String, Object>> test56E7C660() {
-        WebSocketPointageDTO pointage = new WebSocketPointageDTO();
-        pointage.setExternalUid("56E7C660");
-        pointage.setTerminalCode("RFID-TEST-001");
-        pointage.setAgentCode("AGENT-TEST");
-        pointage.setSiteCode("1");
-        pointage.setTimestamp(LocalDateTime.now().toString());
-        pointage.setRawData("{\"test\": true}");
-
-        webSocketPointageService.receivePointage(pointage);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "Pointage test 56E7C660 envoyé");
-        response.put("externalUid", "56E7C660");
-
-        return ResponseEntity.ok(response);
+    @GetMapping("/api/v1/pointages/health")
+    public ResponseEntity<Map<String, Object>> health() {
+        Map<String, Object> health = new HashMap<>();
+        health.put("status", "UP");
+        health.put("service", "FournisseurApiService");
+        health.put("queueSize", webSocketPointageService.getQueueSize());
+        health.put("timestamp", LocalDateTime.now().toString());
+        return ResponseEntity.ok(health);
     }
 }

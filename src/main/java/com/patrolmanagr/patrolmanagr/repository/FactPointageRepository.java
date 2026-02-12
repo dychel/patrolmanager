@@ -14,6 +14,10 @@ import java.util.Optional;
 @Repository
 public interface FactPointageRepository extends JpaRepository<Fact_pointage, Long> {
 
+    // 🔑 Récupérer le timestamp du dernier pointage (AJOUT IMPORTANT !)
+    @Query("SELECT MAX(f.eventTime) FROM Fact_pointage f")
+    LocalDateTime findLastPointageTime();
+
     // Recherche par période
     List<Fact_pointage> findByEventDateBetween(LocalDate startDate, LocalDate endDate);
 
@@ -24,7 +28,7 @@ public interface FactPointageRepository extends JpaRepository<Fact_pointage, Lon
 
     List<Fact_pointage> findBySiteIdAndEventDateBetween(Long siteId, LocalDate startDate, LocalDate endDate);
 
-    // NOUVELLE MÉTHODE AJOUTÉE : Recherche par site et période avec LocalDateTime
+    // Recherche par site et période avec LocalDateTime
     @Query("SELECT fp FROM Fact_pointage fp WHERE fp.siteId = :siteId AND fp.eventTime BETWEEN :startDate AND :endDate")
     List<Fact_pointage> findBySiteIdAndEventTimeBetween(
             @Param("siteId") Long siteId,
@@ -111,21 +115,21 @@ public interface FactPointageRepository extends JpaRepository<Fact_pointage, Lon
             "HAVING COUNT(*) > 1")
     List<Object[]> findPotentialDuplicates();
 
-    // NOUVELLE MÉTHODE : Recherche par pastille et période
+    // Recherche par pastille et période
     @Query("SELECT fp FROM Fact_pointage fp WHERE fp.pastilleId = :pastilleId AND fp.eventTime BETWEEN :start AND :end")
     List<Fact_pointage> findByPastilleIdAndEventTimeBetween(
             @Param("pastilleId") Long pastilleId,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
 
-    // NOUVELLE MÉTHODE : Recherche par agent et période
+    // Recherche par agent et période
     @Query("SELECT fp FROM Fact_pointage fp WHERE fp.agentUserId = :agentUserId AND fp.eventTime BETWEEN :start AND :end")
     List<Fact_pointage> findByAgentUserIdAndEventTimeBetween(
             @Param("agentUserId") Long agentUserId,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end);
 
-    // NOUVELLE MÉTHODE : Recherche par statut et période
+    // Recherche par statut et période
     @Query("SELECT fp FROM Fact_pointage fp WHERE fp.processedStatus = :status AND fp.eventTime BETWEEN :start AND :end")
     List<Fact_pointage> findByProcessedStatusAndEventTimeBetween(
             @Param("status") String status,

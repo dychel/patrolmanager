@@ -40,6 +40,9 @@ public class FactPointageDTO {
     private String processedStatus = "PENDING"; // PENDING, PROCESSED, REJECTED, ERROR
     private String rejectionReason;
 
+    // Raison du rejet
+    private String validationNotes;
+
     // Pour traitement batch
     private Boolean skipValidation = false;
     private String importReference;

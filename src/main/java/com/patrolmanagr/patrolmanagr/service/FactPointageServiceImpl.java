@@ -420,4 +420,8 @@ public class FactPointageServiceImpl implements FactPointageService {
             factPointage.setRejectionReason("Pastille inconnue: " + factPointage.getPastilleCodeRaw());
         }
     }
+    @Override
+    public boolean existsByUniqueKey(LocalDateTime eventTime, String pastilleCodeRaw, String terminalCodeRaw) {
+        return factPointageRepository.existsByUniqueKey(eventTime, pastilleCodeRaw, terminalCodeRaw);
+    }
 }

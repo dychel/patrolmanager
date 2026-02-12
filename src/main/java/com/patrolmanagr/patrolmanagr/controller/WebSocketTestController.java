@@ -21,7 +21,7 @@ public class WebSocketTestController {
     public ResponseEntity<Map<String, Object>> addTestPointage(
             @RequestParam(defaultValue = "56E7C660") String externalUid) {
 
-        webSocketPointageService.addTestPointage(externalUid);
+       // webSocketPointageService.addTestPointage(externalUid);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -53,7 +53,7 @@ public class WebSocketTestController {
      */
     @PostMapping("/process-now")
     public ResponseEntity<Map<String, Object>> processNow() {
-        webSocketPointageService.processBatchEveryMinute();
+      //  webSocketPointageService.processBatchEveryMinute();
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "processing");
