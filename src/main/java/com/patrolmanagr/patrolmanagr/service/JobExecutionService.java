@@ -54,14 +54,15 @@ public class JobExecutionService {
     @Autowired
     private RefPastilleService refPastilleService;
 
-    // Map des jobs par code
+    // Map des jobs par code - AJOUT DU NOUVEAU JOB
     private static final Map<String, String> JOB_NAME_TO_CODE = Map.of(
             "Génération des rondes exécutables", "JOB_GEN_RONDES",
             "Détection des rondes non effectuées", "JOB_DETECT_ANOM",
             "Synchronisation des référentiels", "JOB_SYNC_REF",
             "Calcul des statistiques journalières", "JOB_CALC_STATS",
             "Purge des logs anciens", "JOB_PURGE_LOGS",
-            "Vérification des terminaux", "JOB_CHECK_TERMINALS"
+            "Vérification des terminaux", "JOB_CHECK_TERMINALS",
+            "Intégration des pointages dans les rondes", "JOB_INTEGRATION_POINTAGES"
     );
 
     // Job principal exécuté toutes les minutes
@@ -134,6 +135,14 @@ public class JobExecutionService {
                     totalRondes = generateExecutableRondes(job, jobRun);
                     break;
 
+                case "JOB_INTEGRATION_POINTAGES":
+                    Map<String, Integer> integrationResults = integrerPointagesDansRondes(job, jobRun);
+                    totalRondes = integrationResults.get("rondes");
+                    totalPointages = integrationResults.get("pointages");
+                    totalEvenements = integrationResults.get("evenements");
+                    totalIncidents = integrationResults.get("incidents");
+                    break;
+
                 case "JOB_DETECT_ANOM":
                     Map<String, Integer> results = detectAnomalies(job, jobRun);
                     totalRondes = results.get("rondes");
@@ -164,13 +173,408 @@ public class JobExecutionService {
             updateJobRunStats(jobRun, totalRondes, totalPointages, totalEvenements, totalIncidents);
 
             return completeJobRun(jobRun, JobRunStatus.OK,
-                    String.format("Exécution terminée: %d rondes, %d événements, %d incidents",
-                            totalRondes, totalEvenements, totalIncidents));
+                    String.format("Exécution terminée: %d rondes, %d pointages, %d événements, %d incidents",
+                            totalRondes, totalPointages, totalEvenements, totalIncidents));
 
         } catch (Exception e) {
             return completeJobRun(jobRun, JobRunStatus.ERROR,
                     "Erreur lors de l'exécution: " + e.getMessage());
         }
+    }
+
+    /**
+     * NOUVEAU JOB: Intégration des pointages dans les rondes
+     * Associe les pointages (fact_pointage) aux pastilles des rondes exécutables (exec_ronde_pastille)
+     * en utilisant l'external_uid comme clé de correspondance
+     */
+    private Map<String, Integer> integrerPointagesDansRondes(SysJob job, SysJobRun jobRun) {
+        LocalDate today = LocalDate.now();
+        int rondesTraitees = 0;
+        int pointagesIntegres = 0;
+        int evenementsCrees = 0;
+        int incidentsCrees = 0;
+
+        // Récupérer toutes les rondes exécutables du jour
+        List<Exec_ronde> rondesDuJour = execRondeRepository.findByExecDate(today);
+
+        for (Exec_ronde execRonde : rondesDuJour) {
+            try {
+                rondesTraitees++;
+
+                // Récupérer les pointages du site pour aujourd'hui
+                LocalDateTime startOfDay = today.atStartOfDay();
+                LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+
+                List<Fact_pointage> pointagesSite = factPointageRepository
+                        .findBySiteIdAndEventTimeBetween(
+                                execRonde.getSite().getId(),
+                                startOfDay,
+                                endOfDay
+                        );
+
+                // Traiter les pointages pour cette ronde
+                Map<String, Integer> resultatsRonde = traiterPointagesPourRonde(pointagesSite, execRonde, jobRun);
+                pointagesIntegres += resultatsRonde.get("pointages");
+                evenementsCrees += resultatsRonde.get("evenements");
+                incidentsCrees += resultatsRonde.get("incidents");
+
+            } catch (Exception e) {
+                System.err.println("Erreur lors de l'intégration pour la ronde " + execRonde.getId() + ": " + e.getMessage());
+                evenementService.createAlertEvent(
+                        "Erreur d'intégration",
+                        "Erreur lors de l'intégration des pointages pour la ronde " + execRonde.getRefRonde().getCode(),
+                        EvenementType.AUTRE,
+                        EvenementSeverity.MOYENNE,
+                        execRonde.getId(),
+                        null
+                );
+                evenementsCrees++;
+            }
+        }
+
+        // Événement récapitulatif
+        evenementService.createPositiveEvent(
+                "Job exécuté: Intégration des pointages",
+                String.format("%d rondes traitées, %d pointages intégrés, %d événements",
+                        rondesTraitees, pointagesIntegres, evenementsCrees),
+                EvenementType.JOB_EXECUTE,
+                null,
+                null
+        );
+
+        Map<String, Integer> results = new HashMap<>();
+        results.put("rondes", rondesTraitees);
+        results.put("pointages", pointagesIntegres);
+        results.put("evenements", evenementsCrees);
+        results.put("incidents", incidentsCrees);
+
+        return results;
+    }
+
+    /**
+     * Traite tous les pointages pour une ronde spécifique
+     */
+    private Map<String, Integer> traiterPointagesPourRonde(List<Fact_pointage> pointagesSite, Exec_ronde execRonde, SysJobRun jobRun) {
+        int pointagesIntegres = 0;
+        int evenementsCrees = 0;
+        int incidentsCrees = 0;
+
+        // Grouper les pointages par pastille pour éviter les doublons
+        Map<String, List<Fact_pointage>> pointagesParPastille = pointagesSite.stream()
+                .filter(p -> p.getPastilleCodeRaw() != null && !p.getPastilleCodeRaw().isEmpty())
+                .collect(Collectors.groupingBy(Fact_pointage::getPastilleCodeRaw));
+
+        // Ensemble des pastilles scannées (pour détecter les manquantes)
+        Set<String> externalUidsScannees = new HashSet<>();
+
+        for (Map.Entry<String, List<Fact_pointage>> entry : pointagesParPastille.entrySet()) {
+            String externalUid = entry.getKey();
+            List<Fact_pointage> pointages = entry.getValue();
+
+            // Prendre le pointage le plus récent
+            Fact_pointage pointage = pointages.stream()
+                    .max(Comparator.comparing(Fact_pointage::getEventTime))
+                    .orElse(pointages.get(0));
+
+            // Intégrer le pointage
+            boolean integre = integrerPointageDansRonde(pointage, execRonde, jobRun);
+            if (integre) {
+                pointagesIntegres++;
+                externalUidsScannees.add(externalUid);
+
+                // Vérifier les doublons
+                if (pointages.size() > 1) {
+                    evenementService.createAlertEvent(
+                            "Double scan détecté",
+                            "Pastille avec code " + externalUid + " scannée " + pointages.size() + " fois",
+                            EvenementType.DOUBLE_SCAN,
+                            EvenementSeverity.FAIBLE,
+                            execRonde.getId(),
+                            null
+                    );
+                    evenementsCrees++;
+                }
+            }
+        }
+
+        // Vérifier les pastilles manquantes
+        int pastillesManquantes = verifierPastillesManquantes(execRonde, externalUidsScannees);
+        if (pastillesManquantes > 0) {
+            evenementsCrees += pastillesManquantes;
+
+            // Créer un incident si trop de pastilles manquantes
+            if (pastillesManquantes > 3) {
+                IncidentDTO incidentDTO = new IncidentDTO();
+                incidentDTO.setTitle("Pastilles manquantes multiples");
+                incidentDTO.setDescription(pastillesManquantes + " pastilles non pointées pour la ronde");
+                incidentDTO.setType(IncidentType.PASTILLE_MANQUANTE);
+                incidentDTO.setSeverity(IncidentSeverity.MOYENNE);
+                incidentDTO.setStatus(IncidentStatus.OUVERT);
+                incidentDTO.setExecRondeId(execRonde.getId());
+                incidentDTO.setSiteId(execRonde.getSite().getId());
+                incidentDTO.setRondeId(execRonde.getRefRonde().getId());
+
+                incidentService.createIncident(incidentDTO);
+                incidentsCrees++;
+            }
+        }
+
+        // Vérifier la séquence
+        int erreursSequence = verifierSequence(execRonde);
+        if (erreursSequence > 0) {
+            evenementsCrees += erreursSequence;
+        }
+
+        Map<String, Integer> results = new HashMap<>();
+        results.put("pointages", pointagesIntegres);
+        results.put("evenements", evenementsCrees);
+        results.put("incidents", incidentsCrees);
+
+        return results;
+    }
+
+    /**
+     * Intègre un pointage dans une ronde exécutable
+     */
+    private boolean integrerPointageDansRonde(Fact_pointage pointage, Exec_ronde execRonde, SysJobRun jobRun) {
+        if (pointage.getPastilleCodeRaw() == null || pointage.getPastilleCodeRaw().trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            // 1. Trouver la pastille référentielle par son external_uid
+            Ref_pastille pastille = refPastilleService.findPastilleByExternalUid(pointage.getPastilleCodeRaw());
+
+            if (pastille == null) {
+                // Pastille inconnue dans le référentiel
+                evenementService.createAlertEvent(
+                        "Pastille inconnue",
+                        "Pastille avec code " + pointage.getPastilleCodeRaw() + " non trouvée",
+                        EvenementType.HORS_PLAQUETTE,
+                        EvenementSeverity.MOYENNE,
+                        execRonde.getId(),
+                        null
+                );
+                return false;
+            }
+
+            // 2. Vérifier si cette pastille est dans la ronde
+            List<Ref_ronde_pastille> refPastilles = refRondePastilleRepository
+                    .findByRondeIdAndPastilleId(execRonde.getRefRonde().getId(), pastille.getId());
+
+            if (refPastilles.isEmpty()) {
+                // Pastille non prévue dans cette ronde
+                evenementService.createAlertEvent(
+                        "Pastille hors ronde",
+                        "Pastille " + pastille.getCode() + " non prévue dans la ronde",
+                        EvenementType.HORS_PLAQUETTE,
+                        EvenementSeverity.MOYENNE,
+                        execRonde.getId(),
+                        null
+                );
+                return false;
+            }
+
+            // 3. Chercher si cette pastille est déjà intégrée à la ronde exécutable
+            List<Exec_ronde_pastille> execPastilles = execRondePastilleRepository
+                    .findByExecRondeIdAndPastilleId(execRonde.getId(), pastille.getId());
+
+            Exec_ronde_pastille execPastille;
+            if (execPastilles.isEmpty()) {
+                // Créer une nouvelle entrée (cas rare où la pastille a été ajoutée après génération)
+                execPastille = new Exec_ronde_pastille();
+                execPastille.setExecRonde(execRonde);
+                execPastille.setPastille(pastille);
+                execPastille.setSeqNo(refPastilles.get(0).getSeq_no());
+                execPastille.setExpectedTravelSec(refPastilles.get(0).getExpected_travel_sec());
+                execPastille.setStatus(Status_ronde_pastille.EXPECTED);
+                execPastille.setCreated_at(LocalDateTime.now());
+                execPastille.setCreated_by(userService.getConnectedUserId());
+            } else {
+                execPastille = execPastilles.get(0);
+            }
+
+            // 4. Vérifier si déjà scannée
+            if (execPastille.getStatus() == Status_ronde_pastille.DONE) {
+                evenementService.createAlertEvent(
+                        "Double scan",
+                        "Pastille " + pastille.getCode() + " déjà scannée",
+                        EvenementType.DOUBLE_SCAN,
+                        EvenementSeverity.FAIBLE,
+                        execRonde.getId(),
+                        execPastille.getId()
+                );
+                return false;
+            }
+
+            // 5. Mettre à jour la pastille exécutable
+            execPastille.setStatus(Status_ronde_pastille.DONE);
+            execPastille.setScannedAt(pointage.getEventTime());
+            execPastille.setActualTime(pointage.getEventTime());
+            execPastille.setPointageId(pointage.getId());
+            execPastille.setUpdated_at(LocalDateTime.now());
+            execPastille.setUpdated_by(userService.getConnectedUserId());
+
+            // Calculer l'écart par rapport à l'heure prévue
+            if (execPastille.getExpectedTime() != null) {
+                Duration deviation = Duration.between(execPastille.getExpectedTime(), pointage.getEventTime());
+                execPastille.setDeviationSec((int) deviation.getSeconds());
+                execPastille.setIsLate(deviation.getSeconds() > 0);
+                execPastille.setLateMinutes((int) deviation.toMinutes());
+
+                // Vérifier les retards
+                if (deviation.toMinutes() > 5) {
+                    EvenementType typeRetard = deviation.toMinutes() > 30 ?
+                            EvenementType.RETARD_IMPORTANT : EvenementType.RETARD_MODERE;
+
+                    EvenementSeverity severity = deviation.toMinutes() > 30 ?
+                            EvenementSeverity.ELEVEE : EvenementSeverity.MOYENNE;
+
+                    evenementService.createAlertEvent(
+                            typeRetard == EvenementType.RETARD_IMPORTANT ? "Retard important" : "Retard modéré",
+                            "Retard de " + deviation.toMinutes() + " minutes",
+                            typeRetard,
+                            severity,
+                            execRonde.getId(),
+                            execPastille.getId()
+                    );
+                }
+            }
+
+            execRondePastilleRepository.save(execPastille);
+
+            // 6. Événement de succès
+            evenementService.createPositiveEvent(
+                    "Pastille scannée",
+                    "Pastille " + pastille.getCode() + " intégrée",
+                    EvenementType.PASTILLE_SCANNEE,
+                    execRonde.getId(),
+                    execPastille.getId()
+            );
+
+            return true;
+
+        } catch (ApiRequestException e) {
+            // Pastille non trouvée
+            evenementService.createAlertEvent(
+                    "Pastille inconnue",
+                    "Code pastille " + pointage.getPastilleCodeRaw() + " non enregistré",
+                    EvenementType.HORS_PLAQUETTE,
+                    EvenementSeverity.MOYENNE,
+                    execRonde.getId(),
+                    null
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Vérifie les pastilles manquantes dans une ronde
+     */
+    private int verifierPastillesManquantes(Exec_ronde execRonde, Set<String> externalUidsScannees) {
+        List<Exec_ronde_pastille> pastillesAttendues = execRondePastilleRepository
+                .findByExecRondeId(execRonde.getId());
+
+        int manquantes = 0;
+        for (Exec_ronde_pastille pastilleAttendue : pastillesAttendues) {
+            if (pastilleAttendue.getStatus() != Status_ronde_pastille.DONE) {
+                String externalUid = pastilleAttendue.getPastille().getExternal_uid();
+
+                // Si la pastille n'a pas été scannée
+                if (externalUid == null || !externalUidsScannees.contains(externalUid)) {
+
+                    // Déterminer le type d'événement selon le délai
+                    EvenementType type = EvenementType.PASTILLE_MANQUANTE;
+                    EvenementSeverity severity = EvenementSeverity.MOYENNE;
+
+                    if (pastilleAttendue.getExpectedTime() != null) {
+                        long minutesRetard = Duration.between(
+                                pastilleAttendue.getExpectedTime(),
+                                LocalDateTime.now()
+                        ).toMinutes();
+
+                        if (minutesRetard > 60) {
+                            type = EvenementType.OMISSION_PASTILLE;
+                            severity = EvenementSeverity.ELEVEE;
+                        }
+                    }
+
+                    evenementService.createAlertEvent(
+                            type == EvenementType.OMISSION_PASTILLE ? "Omission pastille" : "Pastille manquante",
+                            "Pastille " + pastilleAttendue.getPastille().getCode() + " non scannée",
+                            type,
+                            severity,
+                            execRonde.getId(),
+                            pastilleAttendue.getId()
+                    );
+
+                    manquantes++;
+
+                    // Marquer comme manquée si délai important
+                    if (pastilleAttendue.getExpectedTime() != null &&
+                            LocalDateTime.now().isAfter(pastilleAttendue.getExpectedTime().plusHours(2))) {
+                        pastilleAttendue.setStatus(Status_ronde_pastille.MISSED);
+                        execRondePastilleRepository.save(pastilleAttendue);
+                    }
+                }
+            }
+        }
+
+        return manquantes;
+    }
+
+    /**
+     * Vérifie la séquence des pointages
+     */
+    private int verifierSequence(Exec_ronde execRonde) {
+        List<Exec_ronde_pastille> pastilles = execRondePastilleRepository
+                .findByExecRondeIdOrderBySeqNo(execRonde.getId());
+
+        int erreurs = 0;
+        int dernierSeqScanne = -1;
+        LocalDateTime dernierTempsScan = null;
+
+        for (Exec_ronde_pastille pastille : pastilles) {
+            if (pastille.getStatus() == Status_ronde_pastille.DONE) {
+
+                // Vérifier la séquence
+                if (pastille.getSeqNo() <= dernierSeqScanne) {
+                    evenementService.createAlertEvent(
+                            "Séquence incorrecte",
+                            "Pastille " + pastille.getPastille().getCode() +
+                                    " (seq " + pastille.getSeqNo() + ") scannée hors ordre",
+                            EvenementType.SEQUENCE_INCORRECTE,
+                            EvenementSeverity.MOYENNE,
+                            execRonde.getId(),
+                            pastille.getId()
+                    );
+                    erreurs++;
+                }
+
+                // Vérifier le temps de trajet si on a le scan précédent
+                if (dernierTempsScan != null && pastille.getExpectedTravelSec() != null) {
+                    long tempsReel = Duration.between(dernierTempsScan, pastille.getScannedAt()).getSeconds();
+                    long tempsAttendu = pastille.getExpectedTravelSec();
+
+                    if (tempsReel > tempsAttendu * 1.5) { // 50% de dépassement
+                        evenementService.createAlertEvent(
+                                "Temps de trajet élevé",
+                                "Temps réel: " + tempsReel + "s, attendu: " + tempsAttendu + "s",
+                                EvenementType.TEMPS_TRAJET_ELEVE,
+                                EvenementSeverity.FAIBLE,
+                                execRonde.getId(),
+                                pastille.getId()
+                        );
+                        erreurs++;
+                    }
+                }
+
+                dernierSeqScanne = pastille.getSeqNo();
+                dernierTempsScan = pastille.getScannedAt();
+            }
+        }
+
+        return erreurs;
     }
 
     private int generateExecutableRondes(SysJob job, SysJobRun jobRun) {
@@ -194,7 +598,7 @@ public class JobExecutionService {
 
                         evenementService.createPositiveEvent(
                                 "Ronde générée",
-                                "Ronde " + ronde.getCode() + " générée pour exécution",
+                                "Ronde " + ronde.getCode() + " générée",
                                 EvenementType.RONDE_GENEREE,
                                 execRonde.getId(),
                                 null
@@ -207,7 +611,7 @@ public class JobExecutionService {
         }
 
         evenementService.createPositiveEvent(
-                "Job exécuté: Génération des rondes",
+                "Job exécuté",
                 generatedCount + " rondes générées",
                 EvenementType.JOB_EXECUTE,
                 null,
@@ -229,8 +633,6 @@ public class JobExecutionService {
             try {
                 rondesAnalyzed++;
 
-                analyzePointagesForRonde(execRonde, jobRun);
-
                 evenementsCreated += detectMissingPastilles(execRonde);
                 evenementsCreated += checkDelays(execRonde);
                 evenementsCreated += checkSequence(execRonde);
@@ -249,98 +651,6 @@ public class JobExecutionService {
         results.put("incidents", incidentsCreated);
 
         return results;
-    }
-
-    private void analyzePointagesForRonde(Exec_ronde execRonde, SysJobRun jobRun) {
-        LocalDate execDate = execRonde.getExecDate();
-        LocalDateTime startOfDay = execDate.atStartOfDay();
-        LocalDateTime endOfDay = execDate.atTime(LocalTime.MAX);
-
-        List<Fact_pointage> pointages = factPointageRepository
-                .findBySiteIdAndEventTimeBetween(
-                        execRonde.getSite().getId(),
-                        startOfDay,
-                        endOfDay
-                );
-
-        pointages = pointages.stream()
-                .filter(p -> p.getRondeId() != null && p.getRondeId().equals(execRonde.getRefRonde().getId()))
-                .collect(Collectors.toList());
-
-        for (Fact_pointage pointage : pointages) {
-            associatePointageWithPastille(pointage, execRonde, jobRun);
-        }
-    }
-
-    private void associatePointageWithPastille(Fact_pointage pointage, Exec_ronde execRonde, SysJobRun jobRun) {
-        if (pointage.getPastilleCodeRaw() == null) {
-            return;
-        }
-
-        try {
-            Ref_pastille pastille = refPastilleService.findPastilleByExternalUid(pointage.getPastilleCodeRaw());
-
-            if (pastille == null) {
-                evenementService.createAlertEvent(
-                        "Pastille inconnue",
-                        "Pastille avec external_uid " + pointage.getPastilleCodeRaw() + " non trouvée",
-                        EvenementType.HORS_PLAQUETTE,
-                        EvenementSeverity.MOYENNE,
-                        execRonde.getId(),
-                        null
-                );
-                return;
-            }
-
-            List<Exec_ronde_pastille> execPastilles = execRondePastilleRepository
-                    .findByExecRondeIdAndPastilleId(execRonde.getId(), pastille.getId());
-
-            if (!execPastilles.isEmpty()) {
-                Exec_ronde_pastille execPastille = execPastilles.get(0);
-
-                if (execPastille.getStatus() == Status_ronde_pastille.DONE) {
-                    evenementService.createAlertEvent(
-                            "Double scan détecté",
-                            "Pastille " + execPastille.getPastille().getCode() + " scannée plusieurs fois",
-                            EvenementType.DOUBLE_SCAN,
-                            EvenementSeverity.FAIBLE,
-                            execRonde.getId(),
-                            execPastille.getId()
-                    );
-                    return;
-                }
-
-                updateExecPastilleFromPointage(execPastille, pointage);
-
-                evenementService.createPositiveEvent(
-                        "Pastille scannée",
-                        "Pastille " + execPastille.getPastille().getCode() + " scannée correctement",
-                        EvenementType.PASTILLE_SCANNEE,
-                        execRonde.getId(),
-                        execPastille.getId()
-                );
-
-            } else {
-                evenementService.createAlertEvent(
-                        "Pastille non attendue",
-                        "Pastille " + pastille.getCode() + " scannée hors de la ronde prévue",
-                        EvenementType.HORS_PLAQUETTE,
-                        EvenementSeverity.MOYENNE,
-                        execRonde.getId(),
-                        null
-                );
-            }
-
-        } catch (ApiRequestException e) {
-            evenementService.createAlertEvent(
-                    "Pastille inconnue",
-                    "Pastille avec external_uid " + pointage.getPastilleCodeRaw() + " non enregistrée",
-                    EvenementType.HORS_PLAQUETTE,
-                    EvenementSeverity.MOYENNE,
-                    execRonde.getId(),
-                    null
-            );
-        }
     }
 
     private int detectMissingPastilles(Exec_ronde execRonde) {
@@ -367,14 +677,12 @@ public class JobExecutionService {
                     severity = EvenementSeverity.MOYENNE;
                 }
 
-                EvenementType type = EvenementType.PASTILLE_MANQUANTE;
-                if (delayMinutes > 30) {
-                    type = EvenementType.OMISSION_PASTILLE;
-                }
+                EvenementType type = delayMinutes > 30 ?
+                        EvenementType.OMISSION_PASTILLE : EvenementType.PASTILLE_MANQUANTE;
 
                 evenementService.createAlertEvent(
                         type == EvenementType.OMISSION_PASTILLE ? "Omission pastille" : "Pastille manquante",
-                        "Pastille " + execPastille.getPastille().getCode() + " non scannée (retard: " + delayMinutes + " min)",
+                        "Pastille " + execPastille.getPastille().getCode() + " non scannée",
                         type,
                         severity,
                         execRonde.getId(),
@@ -397,24 +705,15 @@ public class JobExecutionService {
             if (execPastille.getIsLate() != null && execPastille.getIsLate() &&
                     execPastille.getLateMinutes() != null && execPastille.getLateMinutes() > 0) {
 
-                EvenementSeverity severity = EvenementSeverity.FAIBLE;
-                EvenementType type = EvenementType.RETARD_MODERE;
+                EvenementType type = execPastille.getLateMinutes() > 30 ?
+                        EvenementType.RETARD_IMPORTANT : EvenementType.RETARD_MODERE;
 
-                if (execPastille.getLateMinutes() > 30) {
-                    severity = EvenementSeverity.ELEVEE;
-                    type = EvenementType.RETARD_IMPORTANT;
-                } else if (execPastille.getLateMinutes() > 15) {
-                    severity = EvenementSeverity.MOYENNE;
-                    type = EvenementType.RETARD_MODERE;
-                } else if (execPastille.getLateMinutes() > 5) {
-                    severity = EvenementSeverity.FAIBLE;
-                    type = EvenementType.RETARD_MODERE;
-                }
+                EvenementSeverity severity = execPastille.getLateMinutes() > 30 ?
+                        EvenementSeverity.ELEVEE : EvenementSeverity.MOYENNE;
 
                 evenementService.createAlertEvent(
                         type == EvenementType.RETARD_IMPORTANT ? "Retard important" : "Retard modéré",
-                        "Retard de " + execPastille.getLateMinutes() + " minutes pour la pastille " +
-                                execPastille.getPastille().getCode(),
+                        "Retard de " + execPastille.getLateMinutes() + " minutes",
                         type,
                         severity,
                         execRonde.getId(),
@@ -440,9 +739,8 @@ public class JobExecutionService {
                 Exec_ronde_pastille previous = execPastilles.get(i - 1);
                 if (previous.getStatus() != Status_ronde_pastille.DONE) {
                     evenementService.createAlertEvent(
-                            "Erreur de séquence",
-                            "Pastille " + current.getPastille().getCode() +
-                                    " scannée avant la pastille " + previous.getPastille().getCode(),
+                            "Séquence incorrecte",
+                            "Pastille " + current.getPastille().getCode() + " scannée avant la pastille " + previous.getPastille().getCode(),
                             EvenementType.SEQUENCE_INCORRECTE,
                             EvenementSeverity.MOYENNE,
                             execRonde.getId(),
@@ -465,20 +763,18 @@ public class JobExecutionService {
                 .filter(p -> p.getStatus() == Status_ronde_pastille.DONE)
                 .count();
 
-        long missingPastilles = totalPastilles - scannedPastilles;
-
-        if (missingPastilles > 0 && scannedPastilles < totalPastilles) {
+        if (scannedPastilles < totalPastilles) {
             EvenementSeverity severity = EvenementSeverity.FAIBLE;
 
-            if (missingPastilles > totalPastilles / 2) {
+            if (scannedPastilles < totalPastilles / 2) {
                 severity = EvenementSeverity.ELEVEE;
-            } else if (missingPastilles > totalPastilles / 4) {
+            } else if (scannedPastilles < totalPastilles * 3 / 4) {
                 severity = EvenementSeverity.MOYENNE;
             }
 
             evenementService.createAlertEvent(
                     "Ronde incomplète",
-                    missingPastilles + " pastilles sur " + totalPastilles + " non scannées",
+                    (totalPastilles - scannedPastilles) + " pastilles non scannées",
                     EvenementType.RONDE_INCOMPLETE,
                     severity,
                     execRonde.getId(),
@@ -486,6 +782,17 @@ public class JobExecutionService {
             );
 
             return 1;
+        } else {
+            // Ronde complétée avec succès
+            evenementService.createPositiveEvent(
+                    "Ronde complétée",
+                    "Toutes les pastilles ont été scannées",
+                    EvenementType.RONDE_COMPLETEE,
+                    execRonde.getId(),
+                    null
+            );
+            execRonde.setStatus(Status_exec_Ronde.DONE);
+            execRondeRepository.save(execRonde);
         }
 
         return 0;
@@ -507,7 +814,7 @@ public class JobExecutionService {
         if (totalPastilles > 0 && missingPastilles > totalPastilles / 2) {
             IncidentDTO incidentDTO = new IncidentDTO();
             incidentDTO.setTitle("Ronde gravement incomplète");
-            incidentDTO.setDescription(missingPastilles + " pastilles sur " + totalPastilles + " manquantes");
+            incidentDTO.setDescription(missingPastilles + " pastilles manquantes");
             incidentDTO.setType(IncidentType.PASTILLE_MANQUANTE);
             incidentDTO.setSeverity(IncidentSeverity.ELEVEE);
             incidentDTO.setStatus(IncidentStatus.OUVERT);
@@ -519,7 +826,7 @@ public class JobExecutionService {
             incidentsCreated++;
         }
 
-        // Incident: Retard important sur plusieurs pastilles (>30 min sur au moins 3 pastilles)
+        // Incident: Retards importants multiples
         long importantDelays = execPastilles.stream()
                 .filter(p -> p.getLateMinutes() != null && p.getLateMinutes() > 30)
                 .count();
@@ -527,7 +834,7 @@ public class JobExecutionService {
         if (importantDelays >= 3) {
             IncidentDTO incidentDTO = new IncidentDTO();
             incidentDTO.setTitle("Retards importants multiples");
-            incidentDTO.setDescription(importantDelays + " pastilles avec un retard supérieur à 30 minutes");
+            incidentDTO.setDescription(importantDelays + " pastilles avec retard >30min");
             incidentDTO.setType(IncidentType.RETARD);
             incidentDTO.setSeverity(IncidentSeverity.MOYENNE);
             incidentDTO.setStatus(IncidentStatus.OUVERT);
@@ -539,14 +846,14 @@ public class JobExecutionService {
             incidentsCreated++;
         }
 
-        // Incident: Double scan répété
+        // Incident: Doubles scans répétés
         long doubleScans = evenementService.countEvenementsByExecRondeAndType(
                 execRonde.getId(), EvenementType.DOUBLE_SCAN);
 
         if (doubleScans >= 3) {
             IncidentDTO incidentDTO = new IncidentDTO();
-            incidentDTO.setTitle("Multiples doubles scans");
-            incidentDTO.setDescription(doubleScans + " doubles scans détectés sur cette ronde");
+            incidentDTO.setTitle("Doubles scans multiples");
+            incidentDTO.setDescription(doubleScans + " doubles scans détectés");
             incidentDTO.setType(IncidentType.DOUBLE_SCAN);
             incidentDTO.setSeverity(IncidentSeverity.MOYENNE);
             incidentDTO.setStatus(IncidentStatus.OUVERT);
@@ -645,24 +952,6 @@ public class JobExecutionService {
         }
     }
 
-    private void updateExecPastilleFromPointage(Exec_ronde_pastille execPastille, Fact_pointage pointage) {
-        execPastille.setStatus(Status_ronde_pastille.DONE);
-        execPastille.setScannedAt(pointage.getEventTime());
-        execPastille.setActualTime(pointage.getEventTime());
-        execPastille.setPointageId(pointage.getId());
-        execPastille.setUpdated_at(LocalDateTime.now());
-        execPastille.setUpdated_by(userService.getConnectedUserId());
-
-        if (execPastille.getExpectedTime() != null) {
-            Duration deviation = Duration.between(execPastille.getExpectedTime(), pointage.getEventTime());
-            execPastille.setDeviationSec((int) deviation.getSeconds());
-            execPastille.setIsLate(deviation.getSeconds() > 0);
-            execPastille.setLateMinutes((int) deviation.toMinutes());
-        }
-
-        execRondePastilleRepository.save(execPastille);
-    }
-
     private LocalDateTime calculatePlannedStart(Ref_ronde ronde) {
         LocalDateTime now = LocalDateTime.now();
         LocalTime heureDebut = ronde.getHeure_debut();
@@ -722,9 +1011,9 @@ public class JobExecutionService {
 
     private void createJobErrorEvent(SysJob job, String errorMessage) {
         evenementService.createAlertEvent(
-                "Erreur d'exécution de job",
+                "Erreur job",
                 "Job " + job.getName() + " a échoué: " + errorMessage,
-                EvenementType.JOB_EXECUTE,
+                EvenementType.AUTRE,
                 EvenementSeverity.MOYENNE,
                 null,
                 null
@@ -733,7 +1022,7 @@ public class JobExecutionService {
 
     private void syncReferenceData(SysJobRun jobRun) {
         evenementService.createPositiveEvent(
-                "Synchronisation terminée",
+                "Sync terminée",
                 "Synchronisation des référentiels effectuée",
                 EvenementType.SYNCHRONISATION_TERMINEE,
                 null,
@@ -743,7 +1032,7 @@ public class JobExecutionService {
 
     private void calculateDailyStats(SysJobRun jobRun) {
         evenementService.createPositiveEvent(
-                "Statistiques calculées",
+                "Stats calculées",
                 "Calcul des statistiques journalières effectué",
                 EvenementType.JOB_EXECUTE,
                 null,
@@ -770,10 +1059,9 @@ public class JobExecutionService {
                 null
         );
 
-        // Simulation: création d'un événement terminal inactif
         evenementService.createAlertEvent(
                 "Terminal inactif",
-                "Certains terminaux n'ont pas envoyé de données depuis plus de 24h",
+                "Certains terminaux n'ont pas envoyé de données depuis 24h",
                 EvenementType.TERMINAL_INACTIF,
                 EvenementSeverity.MOYENNE,
                 null,

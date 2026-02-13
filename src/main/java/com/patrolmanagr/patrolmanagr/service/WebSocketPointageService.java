@@ -38,55 +38,42 @@ public class WebSocketPointageService {
     @Autowired
     private RefRondeService refRondeService;
 
-    // =============== FILE D'ATTENTE ===============
     private final ConcurrentLinkedQueue<WebSocketPointageDTO> pointageQueue = new ConcurrentLinkedQueue<>();
     private final AtomicInteger receivedCount = new AtomicInteger(0);
     private final AtomicInteger processedCount = new AtomicInteger(0);
 
-    // =============== RÉCEPTION ===============
-    /**
-     * Reçoit un pointage de l'API fournisseur et l'ajoute à la file d'attente
-     */
     public void receivePointage(WebSocketPointageDTO pointageDTO) {
         try {
-            log.info("📥 Pointage WebSocket reçu: externalUid={}", pointageDTO.getExternalUid());
+            log.info("Pointage WebSocket reçu: externalUid={}", pointageDTO.getExternalUid());
 
-            // Validation - externalUid OBLIGATOIRE
             if (pointageDTO.getExternalUid() == null || pointageDTO.getExternalUid().trim().isEmpty()) {
-                log.warn("❌ Pointage rejeté: externalUid manquant");
+                log.warn("Pointage rejeté: externalUid manquant");
                 return;
             }
 
-            // Ajout à la file
             pointageQueue.offer(pointageDTO);
             receivedCount.incrementAndGet();
 
-            // Notification temps réel
             sendRealtimeNotification(pointageDTO);
 
-            log.debug("📊 Pointage ajouté. File d'attente: {}", pointageQueue.size());
+            log.debug("Pointage ajouté. File d'attente: {}", pointageQueue.size());
 
         } catch (Exception e) {
-            log.error("❌ Erreur réception pointage: {}", e.getMessage(), e);
+            log.error("Erreur réception pointage: {}", e.getMessage(), e);
         }
     }
 
-    // =============== TRAITEMENT BATCH ===============
-    /**
-     * Traitement batch toutes les 1 minute
-     */
-    @Scheduled(fixedRate = 60000) // 60 secondes
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void processBatchEveryMinute() {
         if (pointageQueue.isEmpty()) {
-            log.debug("💤 Aucun pointage à traiter");
+            log.debug("Aucun pointage à traiter");
             return;
         }
 
         int queueSize = pointageQueue.size();
-        log.info("🔄 Début traitement batch: {} pointage(s) en attente", queueSize);
+        log.info("Début traitement batch: {} pointage(s) en attente", queueSize);
 
-        // Extraire tous les pointages de la file
         List<WebSocketPointageDTO> batch = new ArrayList<>();
         WebSocketPointageDTO pointage;
         while ((pointage = pointageQueue.poll()) != null) {
@@ -97,17 +84,14 @@ public class WebSocketPointageService {
             return;
         }
 
-        // Récupérer TOUS les external_uids pour optimisation
         List<String> externalUids = batch.stream()
                 .map(WebSocketPointageDTO::getExternalUid)
                 .filter(uid -> uid != null && !uid.trim().isEmpty())
                 .distinct()
                 .toList();
 
-        // Charger toutes les pastilles correspondantes
         Map<String, Ref_pastille> pastilleMap = loadPastilles(externalUids);
 
-        // Convertir et enrichir chaque pointage
         List<FactPointageDTO> pointagesToSave = new ArrayList<>();
         int successCount = 0;
         int rejectedCount = 0;
@@ -116,57 +100,42 @@ public class WebSocketPointageService {
             try {
                 FactPointageDTO enrichedPointage = convertAndEnrichPointage(wsPointage, pastilleMap);
 
-                // ✅ Vérification doublon avant sauvegarde
-                boolean exists = factPointageService.existsByUniqueKey(
-                        enrichedPointage.getEventTime(),
-                        enrichedPointage.getPastilleCodeRaw(),
-                        enrichedPointage.getTerminalCodeRaw()
-                );
+                // ✅ PLUS AUCUNE VÉRIFICATION DE DOUBLON
+                // On laisse tout passer, la base gérera les doublons via contrainte
 
-                if (!exists) {
-                    pointagesToSave.add(enrichedPointage);
+                pointagesToSave.add(enrichedPointage);
 
-                    if ("PROCESSED".equals(enrichedPointage.getProcessedStatus())) {
-                        successCount++;
-                    } else {
-                        rejectedCount++;
-                        log.warn("⚠️ Pointage rejeté: {} - raison: {}",
-                                wsPointage.getExternalUid(), enrichedPointage.getRejectionReason());
-                    }
+                if ("PROCESSED".equals(enrichedPointage.getProcessedStatus())) {
+                    successCount++;
                 } else {
-                    log.debug("⏭️ Pointage ignoré (doublon): {}", wsPointage.getExternalUid());
                     rejectedCount++;
+                    log.warn("Pointage rejeté: {} - raison: {}",
+                            wsPointage.getExternalUid(), enrichedPointage.getRejectionReason());
                 }
 
             } catch (Exception e) {
-                log.error("❌ Erreur traitement pointage {}: {}",
+                log.error("Erreur traitement pointage {}: {}",
                         wsPointage.getExternalUid(), e.getMessage());
                 rejectedCount++;
             }
         }
 
-        // Sauvegarder en batch dans la base
         if (!pointagesToSave.isEmpty()) {
             try {
                 List<Fact_pointage> savedPointages = factPointageService.savePointageBatch(pointagesToSave);
                 processedCount.addAndGet(savedPointages.size());
 
-                log.info("✅ Batch terminé: {} sauvegardés ({} succès, {} rejets)",
+                log.info("Batch terminé: {} sauvegardés ({} succès, {} rejets)",
                         savedPointages.size(), successCount, rejectedCount);
 
-                // Notification
                 sendBatchNotification(savedPointages.size(), batch.size(), successCount, rejectedCount);
 
             } catch (Exception e) {
-                log.error("❌ Erreur sauvegarde batch: {}", e.getMessage(), e);
+                log.error("Erreur sauvegarde batch: {}", e.getMessage(), e);
             }
         }
     }
 
-    // =============== CHARGEMENT DES PASTILLES ===============
-    /**
-     * Charge toutes les pastilles correspondant aux external_uids
-     */
     private Map<String, Ref_pastille> loadPastilles(List<String> externalUids) {
         Map<String, Ref_pastille> pastilleMap = new HashMap<>();
 
@@ -183,103 +152,79 @@ public class WebSocketPointageService {
                 }
             }
 
-            log.debug("📚 {} pastille(s) chargée(s) pour le batch", pastilles.size());
+            log.debug("{} pastille(s) chargée(s) pour le batch", pastilles.size());
 
         } catch (Exception e) {
-            log.error("❌ Erreur chargement pastilles: {}", e.getMessage());
+            log.error("Erreur chargement pastilles: {}", e.getMessage());
         }
 
         return pastilleMap;
     }
 
-    // =============== CONVERSION ET ENRICHISSEMENT ===============
-    /**
-     * Convertit un pointage WebSocket en FactPointageDTO enrichi
-     */
     private FactPointageDTO convertAndEnrichPointage(WebSocketPointageDTO wsPointage,
                                                      Map<String, Ref_pastille> pastilleMap) {
         FactPointageDTO dto = new FactPointageDTO();
 
-        // 1. Données de base
         dto.setPastilleCodeRaw(wsPointage.getExternalUid());
         dto.setTerminalCodeRaw(wsPointage.getTerminalCode());
         dto.setAgentCodeRaw(wsPointage.getAgentCode());
         dto.setSourceType(Source_Type.GATEWAY);
 
-        // 2. Timestamp
         try {
             dto.setEventTime(LocalDateTime.parse(wsPointage.getTimestamp()));
         } catch (Exception e) {
             dto.setEventTime(LocalDateTime.now());
         }
 
-        // 3. AUTO-ENRICHISSEMENT: Chercher la pastille par external_uid
         Ref_pastille pastille = pastilleMap.get(wsPointage.getExternalUid());
 
         if (pastille != null) {
-            // ✅ PASTILLE TROUVÉE - Récupérer toutes les infos
             enrichWithPastilleInfo(dto, pastille);
             dto.setProcessedStatus("PROCESSED");
-            log.debug("✅ Pastille trouvée: {} (ID: {})", pastille.getExternal_uid(), pastille.getId());
+            log.debug("Pastille trouvée: {} (ID: {})", pastille.getExternal_uid(), pastille.getId());
 
         } else {
-            // ❌ PASTILLE NON TROUVÉE - Rejet
             handleMissingPastille(dto, wsPointage);
-            log.warn("❌ Pastille non trouvée: {}", wsPointage.getExternalUid());
+            log.warn("Pastille non trouvée: {}", wsPointage.getExternalUid());
         }
 
         return dto;
     }
 
-    // =============== ENRICHISSEMENT ===============
-    /**
-     * Enrichit avec les informations de la pastille
-     */
     private void enrichWithPastilleInfo(FactPointageDTO dto, Ref_pastille pastille) {
-        // 1. Informations de la pastille
         dto.setPastilleId(pastille.getId());
         dto.setPastilleLabel(pastille.getLabel());
 
-        // 2. Site (via pastille)
         if (pastille.getRef_site_id() != null) {
             enrichWithSiteInfo(dto, pastille.getRef_site_id());
         }
 
-        // 3. Secteur (via pastille)
         if (pastille.getRef_secteur_id() != null) {
             dto.setSecteurId(pastille.getRef_secteur_id().getId());
             dto.setSecteurName(pastille.getRef_secteur_id().getName());
         }
     }
 
-    /**
-     * Enrichit avec les informations du site
-     */
     private void enrichWithSiteInfo(FactPointageDTO dto, Ref_site site) {
         dto.setSiteId(site.getId());
         dto.setSiteName(site.getName());
 
-        // Zone (via site)
         if (site.getRef_zone() != null) {
             dto.setZoneId(site.getRef_zone().getId());
             dto.setZoneName(site.getRef_zone().getName());
         }
 
-        // Ronde active du site
         try {
             Long rondeId = findActiveRondeForSite(site.getId());
             if (rondeId != null) {
                 dto.setRondeId(rondeId);
-                log.debug("   ↳ Ronde trouvée: {}", rondeId);
+                log.debug("   Ronde trouvée: {}", rondeId);
             }
         } catch (Exception e) {
-            log.warn("   ↳ Aucune ronde trouvée pour le site {}", site.getId());
+            log.warn("   Aucune ronde trouvée pour le site {}", site.getId());
         }
     }
 
-    /**
-     * Trouve une ronde active pour un site
-     */
     private Long findActiveRondeForSite(Long siteId) {
         try {
             List<Ref_ronde> rondes = refRondeService.findRondeByIdSite(siteId);
@@ -288,14 +233,12 @@ public class WebSocketPointageService {
                 return null;
             }
 
-            // Chercher une ronde active
             for (Ref_ronde ronde : rondes) {
                 if (ronde.getStatus() != null && ronde.getStatus().name().equals("ACTIVE")) {
                     return ronde.getId();
                 }
             }
 
-            // Sinon, première ronde
             return rondes.get(0).getId();
 
         } catch (Exception e) {
@@ -304,16 +247,10 @@ public class WebSocketPointageService {
         }
     }
 
-    // =============== GESTION DES ERREURS ===============
-    /**
-     * Gère le cas où la pastille n'est pas trouvée
-     */
     private void handleMissingPastille(FactPointageDTO dto, WebSocketPointageDTO wsPointage) {
-        // Essayer de déterminer le site
         Long siteId = determineSiteId(wsPointage);
         dto.setSiteId(siteId);
 
-        // Récupérer les infos du site si possible
         try {
             Ref_site site = refSiteService.findSiteById(siteId);
             dto.setSiteName(site.getName());
@@ -325,25 +262,16 @@ public class WebSocketPointageService {
         dto.setRejectionReason("Pastille non trouvée: " + wsPointage.getExternalUid());
     }
 
-    /**
-     * Détermine l'ID du site
-     */
     private Long determineSiteId(WebSocketPointageDTO wsPointage) {
         try {
-            // Si siteCode est fourni
             if (wsPointage.getSiteCode() != null) {
                 return Long.parseLong(wsPointage.getSiteCode());
             }
         } catch (Exception e) {
-            // Ignorer
         }
-        return 1L; // Site par défaut
+        return 1L;
     }
 
-    // =============== NOTIFICATIONS WEBSOCKET ===============
-    /**
-     * Notification temps réel à chaque pointage
-     */
     private void sendRealtimeNotification(WebSocketPointageDTO pointage) {
         try {
             Map<String, Object> notification = new HashMap<>();
@@ -351,18 +279,14 @@ public class WebSocketPointageService {
             notification.put("terminalCode", pointage.getTerminalCode());
             notification.put("timestamp", LocalDateTime.now().toString());
             notification.put("queueSize", pointageQueue.size());
-            notification.put("source", "API_FOURNISSEUR");
 
             messagingTemplate.convertAndSend("/topic/pointages/realtime", notification);
 
         } catch (Exception e) {
-            log.error("❌ Erreur notification temps réel: {}", e.getMessage());
+            log.error("Erreur notification temps réel: {}", e.getMessage());
         }
     }
 
-    /**
-     * Notification de fin de batch
-     */
     private void sendBatchNotification(int savedCount, int batchSize, int successCount, int rejectedCount) {
         try {
             Map<String, Object> notification = new HashMap<>();
@@ -371,31 +295,20 @@ public class WebSocketPointageService {
             notification.put("batchSize", batchSize);
             notification.put("successCount", successCount);
             notification.put("rejectedCount", rejectedCount);
-            notification.put("totalReceived", receivedCount.get());
             notification.put("totalProcessed", processedCount.get());
-            notification.put("queueSize", pointageQueue.size());
-            notification.put("source", "API_FOURNISSEUR");
 
             messagingTemplate.convertAndSend("/topic/pointages/batch", notification);
 
         } catch (Exception e) {
-            log.error("❌ Erreur notification batch: {}", e.getMessage());
+            log.error("Erreur notification batch: {}", e.getMessage());
         }
     }
 
-    // =============== STATISTIQUES ===============
-    public int getQueueSize() {
-        return pointageQueue.size();
-    }
+    public int getQueueSize() { return pointageQueue.size(); }
+    public int getTotalReceived() { return receivedCount.get(); }
+    public int getTotalProcessed() { return processedCount.get(); }
 
-    public int getTotalReceived() {
-        return receivedCount.get();
-    }
-
-    public int getTotalProcessed() {
-        return processedCount.get();
-    }
-
+    //  AJOUTE CETTE MÉTHODE ICI
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("queueSize", pointageQueue.size());
@@ -404,10 +317,4 @@ public class WebSocketPointageService {
         stats.put("timestamp", LocalDateTime.now().toString());
         return stats;
     }
-
-    /**
-     * ❌ SUPPRIMÉ - Plus de génération de données de test
-     * Les données viennent exclusivement de l'API fournisseur
-     */
-    // public void addTestPointage(String externalUid) { ... }
 }

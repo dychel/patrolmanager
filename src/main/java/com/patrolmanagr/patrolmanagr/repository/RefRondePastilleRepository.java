@@ -42,4 +42,7 @@ public interface RefRondePastilleRepository extends JpaRepository<Ref_ronde_past
     // Supprimer toutes les pastilles d'une ronde
     @Query("DELETE FROM Ref_ronde_pastille rp WHERE rp.ref_ronde_id.id = :rondeId")
     void deleteByRondeId(@Param("rondeId") Long rondeId);
+
+    @Query("SELECT r FROM Ref_ronde_pastille r WHERE r.ref_ronde_id.id = :rondeId AND r.ref_pastille_id.id = :pastilleId")
+    List<Ref_ronde_pastille> findByRondeIdAndPastilleId(@Param("rondeId") Long rondeId, @Param("pastilleId") Long pastilleId);
 }

@@ -35,7 +35,12 @@ public class FournisseurApiService {
     private FactPointageRepository factPointageRepository;
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-    private LocalDateTime lastPointageTimestamp = null;
+
+    // COMPTEUR = nombre de pointages déjà traités
+    private long lastProcessedCount = 0;
+
+    // Cache anti-doublons intra-appel
+    private final Set<String> processedPointagesCache = Collections.synchronizedSet(new HashSet<>());
 
     private static final List<String> EXTERNAL_UID_KEYS = Arrays.asList(
             "external_uid", "externalUid", "uid", "device_id", "deviceId",
@@ -46,131 +51,121 @@ public class FournisseurApiService {
             "event_time", "timestamp", "eventTime", "created_at", "date", "time", "scanned_at"
     );
 
-    // =============== MÉTHODE PRINCIPALE ===============
+    private static final List<String> TERMINAL_CODE_KEYS = Arrays.asList(
+            "terminal_code", "terminalCode", "reader_id", "readerId", "terminal", "gateway_id"
+    );
+
+    private static final List<String> AGENT_CODE_KEYS = Arrays.asList(
+            "agent_code", "agentCode", "user_id", "userId", "agent", "employee_id"
+    );
+
+    private static final List<String> SITE_CODE_KEYS = Arrays.asList(
+            "site_code", "siteCode", "site_id", "siteId", "location_id"
+    );
+
     @Scheduled(fixedDelay = 60000)
     public void pollFournisseurApi() {
         try {
-            // 1. Initialisation du timestamp
-            if (lastPointageTimestamp == null) {
-                LocalDateTime lastInDb = factPointageRepository.findLastPointageTime();
-                if (lastInDb != null) {
-                    lastPointageTimestamp = lastInDb.plusNanos(1);
-                    log.info("📅 [API] Timestamp initialisé depuis base: {} +1ns", lastInDb);
-                } else {
-                    lastPointageTimestamp = LocalDateTime.now().minusDays(7);
-                    log.info("📅 [API] Aucun pointage en base - Démarrage J-7");
-                }
+            // 1. Initialisation du compteur
+            if (lastProcessedCount == 0) {
+                lastProcessedCount = factPointageRepository.count();
+                log.info("[API] Initialisation - Pointages en base: {}", lastProcessedCount);
             }
 
-            // 2. Construction URL
+            // 2. Toujours tout récupérer (J-7)
             String url = UriComponentsBuilder.fromHttpUrl(apiBaseUrl + "/pointages")
-                    .queryParam("from", lastPointageTimestamp.format(formatter))
-                    .queryParam("limit", 100)
+                    .queryParam("from", LocalDateTime.now().minusDays(7).format(formatter))
+                    .queryParam("limit", 1000)
                     .build()
                     .toUriString();
 
             // 3. Appel API
             FournisseurApiResponse response = callFournisseurApi(url);
 
-            // 4. Traitement des données
+            // 4. Traitement
             if (response != null && response.isSuccess() && response.getData() != null) {
-                List<Object> data = response.getData();
+                List<Object> allData = response.getData();
 
-                if (!data.isEmpty()) {
-                    log.info("📦 [API] {} pointages reçus du fournisseur", data.size());
+                if (!allData.isEmpty()) {
+                    log.info("[API] {} pointages reçus du fournisseur", allData.size());
 
-                    // 5. FILTRAGE : ne garder que les NOUVEAUX pointages
-                    int nouveaux = filterAndProcessNewPointages(data);
+                    // 5. Filtrer pour ne garder que les nouveaux (après le compteur)
+                    List<Object> newData = new ArrayList<>();
+                    int index = 0;
 
-                    if (nouveaux > 0) {
-                        log.info("✅ [API] {} NOUVEAUX pointages traités", nouveaux);
-
-                        // 6. Mise à jour du timestamp depuis la BASE
-                        LocalDateTime dernier = factPointageRepository.findLastPointageTime();
-                        if (dernier != null) {
-                            lastPointageTimestamp = dernier.plusNanos(1);
-                            log.debug("📅 [API] Timestamp mis à jour: {}", lastPointageTimestamp);
+                    for (Object item : allData) {
+                        if (index >= lastProcessedCount) {
+                            newData.add(item);
                         }
-                    } else {
-                        log.info("📭 [API] Aucun nouveau pointage - tous déjà en base");
+                        index++;
                     }
+
+                    log.info("[API] {} nouveaux pointages identifiés (offset: {})", newData.size(), lastProcessedCount);
+
+                    // 6. Envoyer les nouveaux
+                    int envoyes = 0;
+
+                    for (Object item : newData) {
+                        try {
+                            String externalUid = extractExternalUid(item);
+                            String timestampStr = extractTimestamp(item);
+
+                            if (externalUid == null || timestampStr == null) {
+                                log.debug("Pointage ignoré - données incomplètes");
+                                continue;
+                            }
+
+                            // Cache intra-appel uniquement
+                            String uniqueKey = externalUid + "_" + timestampStr;
+                            if (processedPointagesCache.contains(uniqueKey)) {
+                                log.debug("Pointage ignoré - déjà dans le cache: {}", externalUid);
+                                continue;
+                            }
+                            processedPointagesCache.add(uniqueKey);
+
+                            String terminalCode = extractFirstString(item, TERMINAL_CODE_KEYS);
+                            String agentCode = extractFirstString(item, AGENT_CODE_KEYS);
+                            String siteCode = extractFirstString(item, SITE_CODE_KEYS);
+
+                            WebSocketPointageDTO dto = new WebSocketPointageDTO();
+                            dto.setExternalUid(externalUid);
+                            dto.setTimestamp(timestampStr);
+                            dto.setTerminalCode(terminalCode);
+                            dto.setAgentCode(agentCode);
+                            dto.setSiteCode(siteCode);
+                            dto.setRawData(item.toString());
+
+                            webSocketPointageService.receivePointage(dto);
+                            envoyes++;
+
+                        } catch (Exception e) {
+                            log.error("Erreur traitement pointage: {}", e.getMessage());
+                        }
+                    }
+
+                    // 7. Mettre à jour le compteur
+                    lastProcessedCount += envoyes;
+                    log.info("[API] {} nouveaux pointages envoyés. Total traité: {}", envoyes, lastProcessedCount);
+
+                    // 8. Nettoyer le cache
+                    if (processedPointagesCache.size() > 10000) {
+                        processedPointagesCache.clear();
+                        log.debug("[API] Cache vidé");
+                    }
+
+                } else {
+                    log.info("[API] Aucun pointage reçu");
                 }
             }
 
         } catch (Exception e) {
-            log.error("❌ [API] Erreur polling: {}", e.getMessage(), e);
+            log.error("[API] Erreur polling: {}", e.getMessage(), e);
         }
     }
 
-    // =============== FILTRAGE DES NOUVEAUX POINTAGES ===============
-    private int filterAndProcessNewPointages(List<Object> data) {
-        int nouveaux = 0;
-
-        // Récupérer le dernier timestamp en BASE (référence absolue)
-        LocalDateTime dernierEnBase = factPointageRepository.findLastPointageTime();
-        if (dernierEnBase == null) {
-            dernierEnBase = LocalDateTime.now().minusDays(7);
-        }
-
-        for (Object item : data) {
-            try {
-                String externalUid = extractExternalUid(item);
-                if (externalUid == null || externalUid.isEmpty()) {
-                    continue;
-                }
-
-                String timestampStr = extractTimestamp(item);
-                if (timestampStr == null) {
-                    log.debug("⏭️ Pointage ignoré - timestamp manquant: {}", externalUid);
-                    continue;
-                }
-
-                LocalDateTime pointageTime = LocalDateTime.parse(timestampStr, formatter);
-
-                // ✅ UNIQUEMENT les pointages STRICTEMENT PLUS RÉCENTS que le dernier en base
-                if (pointageTime.isAfter(dernierEnBase)) {
-                    WebSocketPointageDTO pointage = new WebSocketPointageDTO();
-                    pointage.setExternalUid(externalUid);
-                    pointage.setTimestamp(timestampStr);
-
-                    // Extraire les champs optionnels si présents
-                    if (item instanceof Map) {
-                        Map<?, ?> map = (Map<?, ?>) item;
-                        Object terminalCode = map.get("terminal_code");
-                        if (terminalCode == null) terminalCode = map.get("terminalCode");
-                        if (terminalCode != null) pointage.setTerminalCode(terminalCode.toString());
-
-                        Object agentCode = map.get("agent_code");
-                        if (agentCode == null) agentCode = map.get("agentCode");
-                        if (agentCode != null) pointage.setAgentCode(agentCode.toString());
-
-                        Object siteCode = map.get("site_code");
-                        if (siteCode == null) siteCode = map.get("siteCode");
-                        if (siteCode == null) siteCode = map.get("site_id");
-                        if (siteCode != null) pointage.setSiteCode(siteCode.toString());
-
-                        pointage.setRawData(map.toString());
-                    }
-
-                    webSocketPointageService.receivePointage(pointage);
-                    nouveaux++;
-                    log.debug("✅ NOUVEAU pointage: {} - {}", externalUid, pointageTime);
-                } else {
-                    log.debug("⏭️ Ancien pointage ignoré (déjà en base): {} - {}", externalUid, pointageTime);
-                }
-
-            } catch (Exception e) {
-                log.error("❌ [API] Erreur filtrage: {}", e.getMessage());
-            }
-        }
-
-        return nouveaux;
-    }
-
-    // =============== APPEL API ===============
     private FournisseurApiResponse callFournisseurApi(String url) {
         try {
-            log.debug("📡 [API] Appel: {}", url);
+            log.debug("[API] Appel: {}", url);
 
             HttpHeaders headers = new HttpHeaders();
             if (apiKey != null && !apiKey.isEmpty()) {
@@ -187,12 +182,11 @@ public class FournisseurApiService {
             return response.getBody();
 
         } catch (Exception e) {
-            log.error("❌ [API] Échec appel: {}", e.getMessage());
+            log.error("[API] Échec appel: {}", e.getMessage());
             return null;
         }
     }
 
-    // =============== EXTRACTION EXTERNAL_UID ===============
     private String extractExternalUid(Object obj) {
         if (!(obj instanceof Map)) return null;
         Map<?, ?> map = (Map<?, ?>) obj;
@@ -206,7 +200,6 @@ public class FournisseurApiService {
         return null;
     }
 
-    // =============== EXTRACTION TIMESTAMP ===============
     private String extractTimestamp(Object obj) {
         if (!(obj instanceof Map)) return null;
         Map<?, ?> map = (Map<?, ?>) obj;
@@ -219,7 +212,18 @@ public class FournisseurApiService {
         return null;
     }
 
-    // =============== CLASSE DE RÉPONSE API ===============
+    private String extractFirstString(Object obj, List<String> keys) {
+        if (!(obj instanceof Map)) return null;
+        Map<?, ?> map = (Map<?, ?>) obj;
+        for (String key : keys) {
+            Object value = map.get(key);
+            if (value != null) {
+                return value.toString();
+            }
+        }
+        return null;
+    }
+
     public static class FournisseurApiResponse {
         private boolean success;
         private List<Object> data;
