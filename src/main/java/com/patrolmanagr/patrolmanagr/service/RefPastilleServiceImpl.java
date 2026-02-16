@@ -45,9 +45,9 @@ public class RefPastilleServiceImpl implements RefPastilleService {
             throw new ApiRequestException("Le label de la pastille est obligatoire");
         }
 
-        if (refPastilleDTO.getRefSiteId() == null) {
-            throw new ApiRequestException("Le site est obligatoire");
-        }
+//        if (refPastilleDTO.getRefSiteId() == null) {
+//            throw new ApiRequestException("Le site est obligatoire");
+//        }
 
         // Vérifier si le code existe déjà
         Ref_pastille existingByCode = refPastilleRepository.findByCode(refPastilleDTO.getCode());

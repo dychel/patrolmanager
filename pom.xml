@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.2.5</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.galima</groupId>
 	<artifactId>STOCK</artifactId>
@@ -60,17 +60,9 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-quartz</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -83,13 +75,26 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Apache POI pour Excel -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
+		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt -->
-<!--		<dependency>-->
-<!--			<groupId>io.jsonwebtoken</groupId>-->
-<!--			<artifactId>jjwt</artifactId>-->
-<!--			<version>0.9.1</version>-->
-<!--		</dependency>-->
+		<!-- UNE SEULE dépendance commons-io, version récente -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
+		</dependency>
+
+		<!-- JWT Dependencies -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
@@ -107,35 +112,22 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!--	La dépendance suivante est un moyen courant de préparer une application Spring Boot
-                pour un déploiement dans un environnement où Tomcat est déjà installé et
-                géré indépendamment de l'application. Dans le cas contraire commenter la dépendance -->
-		<!--<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>-->
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.3</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
-		<!--	Avec cette dependance vous pouvez utiliser des annotations pour spécifier des contraintes
-                 sur les champs des classes. Par exemple, @NotNull, @Size, @Min, @Max -->
+
+		<!-- Validation API -->
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>2.0.0.Final</version>
 		</dependency>
 
-<!--		 JAXB API-->
+		<!-- JAXB API -->
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>
 			<version>2.3.1</version>
 		</dependency>
 
+		<!-- Model Mapper -->
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>

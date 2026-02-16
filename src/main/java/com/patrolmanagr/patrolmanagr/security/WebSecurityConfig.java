@@ -289,6 +289,26 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/v1/patrolmanagr/job-execution/execute-manual/{jobId}").permitAll()
                 .requestMatchers("/api/v1/patrolmanagr/job-execution/force-execute/{jobId}").permitAll()
 
+                // ============ ROUTES INGEST BATCH ============
+                // Routes pour la gestion des batches d'importation
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/add").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/start").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/complete/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/update/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/all").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/findbyid/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/findbyvendor/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/findbystatus/**").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/findbydaterange").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/ingestbatch/delete/**").permitAll()
+
+                // ============ ROUTES D'IMPORT DE POINTAGES ============
+                // Routes pour l'import manuel de pointages (CSV/XLSX)
+                .requestMatchers("/api/v1/patrolmanagr/pointages/import").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/import/template").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/import/example").permitAll()
+                .requestMatchers("/api/v1/patrolmanagr/pointages/import/batch/**").permitAll()
+
                 // Routes pour les fichiers statiques
                 .requestMatchers("/images/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
