@@ -19,6 +19,14 @@ target/
 *.iml
 *.ipr
 
+*.log
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+application-local.properties
+application-dev.properties
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

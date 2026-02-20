@@ -29,6 +29,9 @@ public class UserServiceImpl implements UserService {
     private ModelMapper modelMapper;
     @Autowired
     private RoleService roleService;
+
+    private static final byte ACTIVE = 1;
+
     @Override
     public List<User> listUsers() {
         return userRepository.findAll();
@@ -45,13 +48,12 @@ public class UserServiceImpl implements UserService {
 
         user.setLastName(userDTO.getLastName().toUpperCase());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-
+        user.setIs_active(ACTIVE);
         // Mettre à jour les infos du role du user
         if (userDTO.getRoleId() != null)
             user.setRole_code(roleService.findRoleById(userDTO.getRoleId()));
         return userRepository.save(user);
     }
-
 
     @Override
     public User updateUser(Long id, UserDTO userDTO) {
